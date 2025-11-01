@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Mic, MicOff, ArrowRight, RotateCcw } from "lucide-react";
+import { Mic, MicOff, ArrowRight, RotateCcw, BookmarkPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
@@ -27,9 +27,12 @@ const SentencePractice = ({ sentences, onReset }: SentencePracticeProps) => {
     isCorrect: boolean;
   } | null>(null);
   const [recognition, setRecognition] = useState<SpeechRecognition | null>(null);
+  const [savedExpressions, setSavedExpressions] = useState<Sentence[]>([]);
+  const [showSavedOnly, setShowSavedOnly] = useState(false);
 
-  const currentSentence = sentences[currentIndex];
-  const progress = ((currentIndex + 1) / sentences.length) * 100;
+  const displaySentences = showSavedOnly ? savedExpressions : sentences;
+  const currentSentence = displaySentences[currentIndex];
+  const progress = ((currentIndex + 1) / displaySentences.length) * 100;
 
   const startListening = () => {
     if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
@@ -85,26 +88,8 @@ const SentencePractice = ({ sentences, onReset }: SentencePracticeProps) => {
     }
   };
 
-  const checkAnswer = () => {
-    if (!userAnswer.trim()) {
-      toast.error("먼저 음성을 녹음하세요!");
-      return;
-    }
-
-    const similarity = calculateSimilarity(userAnswer.toLowerCase(), currentSentence.영어.toLowerCase());
-    const isCorrect = similarity >= 70;
-
-    setResult({ similarity, isCorrect });
-
-    if (isCorrect) {
-      toast.success(`정답입니다! (유사도: ${similarity}%)`);
-    } else {
-      toast.error(`틀렸습니다. (유사도: ${similarity}%)`);
-    }
-  };
-
   const nextSentence = () => {
-    if (currentIndex < sentences.length - 1) {
+    if (currentIndex < displaySentences.length - 1) {
       setCurrentIndex(currentIndex + 1);
       setUserAnswer("");
       setResult(null);
@@ -113,16 +98,44 @@ const SentencePractice = ({ sentences, onReset }: SentencePracticeProps) => {
     }
   };
 
+  const saveExpression = () => {
+    if (!savedExpressions.find(s => s.순번 === currentSentence.순번)) {
+      setSavedExpressions([...savedExpressions, currentSentence]);
+      toast.success("표현이 저장되었습니다!");
+    } else {
+      toast.info("이미 저장된 표현입니다.");
+    }
+  };
+
+  const toggleSavedView = () => {
+    setShowSavedOnly(!showSavedOnly);
+    setCurrentIndex(0);
+    setUserAnswer("");
+    setResult(null);
+    toast.info(showSavedOnly ? "전체 문장 보기" : "저장된 표현만 보기");
+  };
+
   return (
     <div className="w-full max-w-3xl mx-auto space-y-6">
       <div className="flex items-center justify-between">
         <div className="text-sm font-medium">
-          문제 {currentIndex + 1} / {sentences.length}
+          문제 {currentIndex + 1} / {displaySentences.length}
+          {showSavedOnly && " (저장된 표현)"}
         </div>
-        <Button variant="outline" size="sm" onClick={onReset}>
-          <RotateCcw className="w-4 h-4 mr-2" />
-          다시 시작
-        </Button>
+        <div className="flex gap-2">
+          <Button 
+            variant={showSavedOnly ? "default" : "outline"} 
+            size="sm" 
+            onClick={toggleSavedView}
+            disabled={savedExpressions.length === 0}
+          >
+            저장된 표현 ({savedExpressions.length})
+          </Button>
+          <Button variant="outline" size="sm" onClick={onReset}>
+            <RotateCcw className="w-4 h-4 mr-2" />
+            다시 시작
+          </Button>
+        </div>
       </div>
 
       <Progress value={progress} className="h-2" />
@@ -145,6 +158,10 @@ const SentencePractice = ({ sentences, onReset }: SentencePracticeProps) => {
               ⏹ 말하기 종료
             </Button>
           )}
+          <Button onClick={saveExpression} variant="secondary" size="lg" className="gap-2">
+            <BookmarkPlus className="w-5 h-5" />
+            표현저장하기
+          </Button>
         </div>
 
         {userAnswer && (
@@ -169,7 +186,7 @@ const SentencePractice = ({ sentences, onReset }: SentencePracticeProps) => {
           </div>
         )}
 
-        {currentIndex < sentences.length - 1 && (
+        {currentIndex < displaySentences.length - 1 && (
           <div className="flex justify-center">
             <Button onClick={nextSentence} size="lg" className="gap-2">
               ⏭ 다음 문장
@@ -178,7 +195,7 @@ const SentencePractice = ({ sentences, onReset }: SentencePracticeProps) => {
           </div>
         )}
 
-        {currentIndex === sentences.length - 1 && result && (
+        {currentIndex === displaySentences.length - 1 && result && (
           <div className="text-center text-muted-foreground">
             마지막 문장입니다. '다시 시작' 버튼을 눌러 처음부터 다시 연습하세요.
           </div>
