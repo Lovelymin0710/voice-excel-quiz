@@ -70,7 +70,23 @@ const SentencePractice = ({ sentences, onReset }: SentencePracticeProps) => {
 
     recognitionInstance.onerror = (event) => {
       setIsListening(false);
-      toast.error(`음성 인식 오류: ${event.error}`);
+      
+      // Security: Map technical errors to user-friendly messages
+      const errorMessages: Record<string, string> = {
+        'no-speech': '음성이 감지되지 않았습니다. 다시 시도해주세요.',
+        'audio-capture': '마이크를 사용할 수 없습니다. 마이크 권한을 확인해주세요.',
+        'not-allowed': '마이크 권한이 거부되었습니다. 브라우저 설정에서 권한을 허용해주세요.',
+        'network': '네트워크 오류가 발생했습니다.',
+        'aborted': '음성 인식이 중단되었습니다.',
+      };
+      
+      const message = errorMessages[event.error] || '음성 인식 중 오류가 발생했습니다.';
+      toast.error(message);
+      
+      // Log technical details only in development
+      if (import.meta.env.DEV) {
+        console.error('Speech recognition error:', event.error);
+      }
     };
 
     recognitionInstance.onend = () => {

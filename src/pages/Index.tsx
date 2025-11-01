@@ -1,5 +1,6 @@
 import { useState } from "react";
 import * as XLSX from "xlsx";
+import { z } from "zod";
 import ExcelUploader from "@/components/ExcelUploader";
 import SentencePractice from "@/components/SentencePractice";
 import { toast } from "sonner";
@@ -11,6 +12,31 @@ interface Sentence {
   암기날짜: string;
 }
 
+// Security: Validate Excel content to prevent XSS and resource exhaustion
+const sentenceSchema = z.object({
+  순번: z.number().int().positive(),
+  한글: z.string()
+    .trim()
+    .min(1, "한글 내용이 비어있습니다")
+    .max(500, "한글 내용이 너무 깁니다 (최대 500자)")
+    .refine(
+      (val) => !val.startsWith('=') && !val.startsWith('+') && !val.startsWith('-') && !val.startsWith('@'),
+      "수식이 포함된 셀은 허용되지 않습니다"
+    ),
+  영어: z.string()
+    .trim()
+    .min(1, "영어 내용이 비어있습니다")
+    .max(500, "영어 내용이 너무 깁니다 (최대 500자)")
+    .refine(
+      (val) => !val.startsWith('=') && !val.startsWith('+') && !val.startsWith('-') && !val.startsWith('@'),
+      "수식이 포함된 셀은 허용되지 않습니다"
+    ),
+  암기날짜: z.string().max(100).optional(),
+});
+
+const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+const MAX_ROWS = 1000;
+
 const Index = () => {
   const [sentences, setSentences] = useState<Sentence[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -18,6 +44,12 @@ const Index = () => {
   const handleFileUpload = async (file: File) => {
     setIsLoading(true);
     try {
+      // Security: Validate file size to prevent memory exhaustion
+      if (file.size > MAX_FILE_SIZE) {
+        toast.error("파일이 너무 큽니다. 최대 5MB까지 업로드 가능합니다.");
+        return;
+      }
+
       const data = await file.arrayBuffer();
       const workbook = XLSX.read(data);
       const sheetName = workbook.SheetNames[0];
@@ -29,6 +61,12 @@ const Index = () => {
         return;
       }
 
+      // Security: Limit number of rows to prevent resource exhaustion
+      if (jsonData.length > MAX_ROWS) {
+        toast.error(`파일에 데이터가 너무 많습니다. 최대 ${MAX_ROWS}개의 행까지 처리 가능합니다.`);
+        return;
+      }
+
       // 필수 컬럼 확인
       const firstRow = jsonData[0];
       if (!firstRow.한글 || !firstRow.영어) {
@@ -36,12 +74,36 @@ const Index = () => {
         return;
       }
 
+      // Security: Validate and sanitize each row
+      const validatedData: Sentence[] = [];
+      for (let i = 0; i < jsonData.length; i++) {
+        try {
+          const validated = sentenceSchema.parse(jsonData[i]);
+          validatedData.push({
+            순번: validated.순번,
+            한글: validated.한글,
+            영어: validated.영어,
+            암기날짜: validated.암기날짜 || '',
+          });
+        } catch (error) {
+          if (error instanceof z.ZodError) {
+            toast.error(`${i + 1}번째 행 오류: ${error.errors[0].message}`);
+          } else {
+            toast.error(`${i + 1}번째 행을 처리할 수 없습니다.`);
+          }
+          return;
+        }
+      }
+
       // 문장 순서를 랜덤으로 섞기
-      const shuffled = [...jsonData].sort(() => Math.random() - 0.5);
+      const shuffled = [...validatedData].sort(() => Math.random() - 0.5);
       setSentences(shuffled);
-      toast.success(`${jsonData.length}개의 문장을 불러왔습니다! (랜덤 순서)`);
+      toast.success(`${validatedData.length}개의 문장을 불러왔습니다! (랜덤 순서)`);
     } catch (error) {
-      console.error("파일 읽기 오류:", error);
+      // Security: Don't expose internal error details
+      if (import.meta.env.DEV) {
+        console.error("파일 읽기 오류:", error);
+      }
       toast.error("파일을 읽는 중 오류가 발생했습니다.");
     } finally {
       setIsLoading(false);
