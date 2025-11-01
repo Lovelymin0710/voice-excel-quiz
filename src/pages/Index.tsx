@@ -36,8 +36,10 @@ const Index = () => {
         return;
       }
 
-      setSentences(jsonData);
-      toast.success(`${jsonData.length}개의 문장을 불러왔습니다!`);
+      // 문장 순서를 랜덤으로 섞기
+      const shuffled = [...jsonData].sort(() => Math.random() - 0.5);
+      setSentences(shuffled);
+      toast.success(`${jsonData.length}개의 문장을 불러왔습니다! (랜덤 순서)`);
     } catch (error) {
       console.error("파일 읽기 오류:", error);
       toast.error("파일을 읽는 중 오류가 발생했습니다.");
