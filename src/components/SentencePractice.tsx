@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Mic, MicOff, CheckCircle, ArrowRight, RotateCcw } from "lucide-react";
+import { Mic, MicOff, ArrowRight, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
@@ -52,7 +52,17 @@ const SentencePractice = ({ sentences, onReset }: SentencePracticeProps) => {
       const transcript = event.results[0][0].transcript;
       setUserAnswer(transcript);
       setIsListening(false);
-      toast.success("음성이 인식되었습니다!");
+      
+      // 자동 채점
+      const similarity = calculateSimilarity(transcript.toLowerCase(), currentSentence.영어.toLowerCase());
+      const isCorrect = similarity >= 70;
+      setResult({ similarity, isCorrect });
+      
+      if (isCorrect) {
+        toast.success(`정답입니다! (유사도: ${similarity}%)`);
+      } else {
+        toast.error(`틀렸습니다. (유사도: ${similarity}%)`);
+      }
     };
 
     recognitionInstance.onerror = (event) => {
@@ -135,10 +145,6 @@ const SentencePractice = ({ sentences, onReset }: SentencePracticeProps) => {
               ⏹ 말하기 종료
             </Button>
           )}
-          <Button onClick={checkAnswer} variant="secondary" size="lg" className="gap-2">
-            <CheckCircle className="w-5 h-5" />
-            ✅ 채점
-          </Button>
         </div>
 
         {userAnswer && (
