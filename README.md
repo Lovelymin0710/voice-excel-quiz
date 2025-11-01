@@ -1,73 +1,77 @@
-# Welcome to your Lovable project
+# 🧠 영스체크 (YoungsCheck)
 
-## Project info
+영스체크는 사용자가 영어 문장을 **말하기(Speaking)**로 외웠는지 확인할 수 있는 웹 애플리케이션입니다.  
+한글 문장을 보고 영어로 말하면, 웹이 음성을 텍스트로 변환하고 정답 문장과 비교하여 **의미가 비슷한지 판단**합니다.
 
-**URL**: https://lovable.dev/projects/b451ff66-3440-40bd-be47-3e9e2da9d0a9
+---
 
-## How can I edit this code?
+## ✅ 실제 사용 가능한 사이트
 
-There are several ways of editing your application.
+아래 링크에서 바로 사용해볼 수 있습니다:
 
-**Use Lovable**
+👉 **https://voice-excel-quiz.lovable.app/?utm_source=lovable-editor**
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/b451ff66-3440-40bd-be47-3e9e2da9d0a9) and start prompting.
+---
 
-Changes made via Lovable will be committed automatically to this repo.
+## ✅ 주요 기능
 
-**Use your preferred IDE**
+✔ **엑셀 업로드 (.xlsx)**  
+| 순번 | 한글 | 영어 | 암기날짜 | 형식의 문장을 불러옵니다.
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+✔ **한글 문장 표시 & 영어 말하기**  
+- 한국어 문장을 보고 영어로 말하기  
+- Web Speech API로 음성을 텍스트로 변환  
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+✔ **정답 비교 & 채점 결과 제공**  
+- You said: 사용자가 말한 문장  
+- Correct is: 정답 영어 문장  
+- Similarity %: 문장 유사도  
+- 기준 이상일 경우 ✅ O, 아니면 ❌ X
 
-Follow these steps:
+---
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+## ⚙ 기술 스택
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+| 항목 | 사용 기술 |
+|------|-----------|
+| 프레임워크 | React, TypeScript, Vite |
+| 스타일 | Tailwind CSS + shadcn/ui |
+| 음성 인식 | Web Speech API (브라우저 기본 기능, 무료) |
+| 엑셀 파싱 | SheetJS (xlsx.js) |
+| 배포 | Lovable Publish (Vercel 기반) |
 
-# Step 3: Install the necessary dependencies.
-npm i
+---
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
+## 📁 폴더 구조
+
+```plaintext
+voice-excel-quiz/
+├── public/
+├── src/
+│   ├── components/
+│   ├── pages/
+│   ├── App.tsx
+│   └── main.tsx
+├── index.html
+├── package.json
+└── README.md
+
+🚀 실행 방법
+git clone https://github.com/Lovelymin0710/voice-excel-quiz.git
+cd voice-excel-quiz
+npm install
 npm run dev
-```
 
-**Edit a file directly in GitHub**
+📌 주의사항
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+크롬 및 엣지 브라우저 권장 (Web Speech API 지원)
+iPhone Safari에서는 음성 인식 제한 가능
+OpenAI, Whisper API 사용하지 않음 → 완전 무료
 
-**Use GitHub Codespaces**
+🧩 향후 개선 예정
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
-
-## What technologies are used for this project?
-
-This project is built with:
-
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/b451ff66-3440-40bd-be47-3e9e2da9d0a9) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+ GPT 기반 의미 비교 정확도 강화
+ 오답 문장 자동 반복 학습
+ 학습 기록 저장 (LocalStorage / DB)
+ PWA 적용하여 앱처럼 설치 가능
+ 발음 정확도 피드백 기능 추가
