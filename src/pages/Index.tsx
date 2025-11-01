@@ -14,24 +14,24 @@ interface Sentence {
 
 // Security: Validate Excel content to prevent XSS and resource exhaustion
 const sentenceSchema = z.object({
-  순번: z.number().int().positive(),
-  한글: z.string()
-    .trim()
-    .min(1, "한글 내용이 비어있습니다")
-    .max(500, "한글 내용이 너무 깁니다 (최대 500자)")
+  순번: z.union([z.number(), z.string()]).pipe(z.coerce.number().int().positive()),
+  한글: z.union([z.string(), z.number()])
+    .transform(val => String(val).trim())
+    .refine(val => val.length > 0, "한글 내용이 비어있습니다")
+    .refine(val => val.length <= 500, "한글 내용이 너무 깁니다 (최대 500자)")
     .refine(
       (val) => !val.startsWith('=') && !val.startsWith('+') && !val.startsWith('-') && !val.startsWith('@'),
       "수식이 포함된 셀은 허용되지 않습니다"
     ),
-  영어: z.string()
-    .trim()
-    .min(1, "영어 내용이 비어있습니다")
-    .max(500, "영어 내용이 너무 깁니다 (최대 500자)")
+  영어: z.union([z.string(), z.number()])
+    .transform(val => String(val).trim())
+    .refine(val => val.length > 0, "영어 내용이 비어있습니다")
+    .refine(val => val.length <= 500, "영어 내용이 너무 깁니다 (최대 500자)")
     .refine(
       (val) => !val.startsWith('=') && !val.startsWith('+') && !val.startsWith('-') && !val.startsWith('@'),
       "수식이 포함된 셀은 허용되지 않습니다"
     ),
-  암기날짜: z.string().max(100).optional(),
+  암기날짜: z.union([z.string(), z.number(), z.undefined()]).transform(val => val ? String(val) : '').optional(),
 });
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
