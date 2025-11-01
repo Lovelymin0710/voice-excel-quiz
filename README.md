@@ -55,23 +55,30 @@ voice-excel-quiz/
 ├── index.html
 ├── package.json
 └── README.md
+```
+## 🚀 실행 방법 (Execution)
 
-🚀 실행 방법
+```bash
 git clone https://github.com/Lovelymin0710/voice-excel-quiz.git
 cd voice-excel-quiz
 npm install
 npm run dev
+```
 
-📌 주의사항
-
+## 📌 주의사항
+```bash
 크롬 및 엣지 브라우저 권장 (Web Speech API 지원)
 iPhone Safari에서는 음성 인식 제한 가능
 OpenAI, Whisper API 사용하지 않음 → 완전 무료
+```
 
-🧩 향후 개선 예정
+## 🧩 향후 개선 예정
+```bash
 
  GPT 기반 의미 비교 정확도 강화
  오답 문장 자동 반복 학습
  학습 기록 저장 (LocalStorage / DB)
  PWA 적용하여 앱처럼 설치 가능
  발음 정확도 피드백 기능 추가
+```
+
