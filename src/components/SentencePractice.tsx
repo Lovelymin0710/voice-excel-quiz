@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Mic, MicOff, ArrowRight, RotateCcw, BookmarkPlus } from "lucide-react";
+import { Mic, MicOff, ArrowRight, RotateCcw, BookmarkPlus, Volume2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
@@ -29,6 +29,7 @@ const SentencePractice = ({ sentences, onReset }: SentencePracticeProps) => {
   const [recognition, setRecognition] = useState<SpeechRecognition | null>(null);
   const [savedExpressions, setSavedExpressions] = useState<Sentence[]>([]);
   const [showSavedOnly, setShowSavedOnly] = useState(false);
+  const [isSpeaking, setIsSpeaking] = useState(false);
 
   const displaySentences = showSavedOnly ? savedExpressions : sentences;
   const currentSentence = displaySentences[currentIndex];
@@ -102,6 +103,33 @@ const SentencePractice = ({ sentences, onReset }: SentencePracticeProps) => {
       recognition.stop();
       setIsListening(false);
     }
+  };
+
+  const speakSentence = (text: string) => {
+    // 이미 재생 중이면 중지
+    if (window.speechSynthesis.speaking) {
+      window.speechSynthesis.cancel();
+      setIsSpeaking(false);
+      return;
+    }
+
+    const utterance = new SpeechSynthesisUtterance(text);
+    
+    // 영어 음성 설정
+    utterance.lang = 'en-US';
+    utterance.rate = 0.9; // 약간 느리게 (학습용)
+    utterance.pitch = 1.0;
+    utterance.volume = 1.0;
+
+    // 이벤트 핸들러
+    utterance.onstart = () => setIsSpeaking(true);
+    utterance.onend = () => setIsSpeaking(false);
+    utterance.onerror = () => {
+      setIsSpeaking(false);
+      toast.error("음성 재생 중 오류가 발생했습니다.");
+    };
+
+    window.speechSynthesis.speak(utterance);
   };
 
   const nextSentence = () => {
@@ -188,7 +216,17 @@ const SentencePractice = ({ sentences, onReset }: SentencePracticeProps) => {
             </div>
 
             <div>
-              <div className="text-sm font-medium text-muted-foreground mb-1">Correct is:</div>
+              <div className="text-sm font-medium text-muted-foreground mb-1 flex items-center gap-2">
+                Correct is:
+                <button
+                  onClick={() => speakSentence(currentSentence.영어)}
+                  className="p-1.5 rounded-full hover:bg-primary/10 transition-colors"
+                  aria-label="문장 듣기"
+                  disabled={isSpeaking}
+                >
+                  <Volume2 className={`w-5 h-5 ${isSpeaking ? 'text-primary animate-pulse' : 'text-muted-foreground'}`} />
+                </button>
+              </div>
               <div className="text-lg font-medium">{currentSentence.영어}</div>
             </div>
 
