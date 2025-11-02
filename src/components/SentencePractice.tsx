@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Mic, MicOff, ArrowRight, RotateCcw, BookmarkPlus, Volume2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -33,6 +33,25 @@ const SentencePractice = ({ sentences, onReset }: SentencePracticeProps) => {
 
   const displaySentences = showSavedOnly ? savedExpressions : sentences;
   const currentSentence = displaySentences[currentIndex];
+
+  // 음성 목록 로드 대기 (iOS Safari 대응)
+  useEffect(() => {
+    const loadVoices = () => {
+      window.speechSynthesis.getVoices();
+    };
+    
+    // 즉시 실행
+    loadVoices();
+    
+    // iOS Safari용 이벤트 리스너
+    if (window.speechSynthesis.onvoiceschanged !== undefined) {
+      window.speechSynthesis.onvoiceschanged = loadVoices;
+    }
+    
+    return () => {
+      window.speechSynthesis.onvoiceschanged = null;
+    };
+  }, []);
   const progress = ((currentIndex + 1) / displaySentences.length) * 100;
 
   const startListening = () => {
@@ -117,16 +136,48 @@ const SentencePractice = ({ sentences, onReset }: SentencePracticeProps) => {
     
     // 영어 음성 설정
     utterance.lang = 'en-US';
-    utterance.rate = 0.9; // 약간 느리게 (학습용)
+    utterance.rate = 0.9;
     utterance.pitch = 1.0;
     utterance.volume = 1.0;
+
+    // iOS용 고품질 음성 선택
+    const voices = window.speechSynthesis.getVoices();
+    
+    // 고품질 영어 음성 우선순위: Samantha(여성) > Karen(여성) > Nicky(여성) > 기타 en-US
+    const preferredVoices = ['Samantha', 'Karen', 'Nicky'];
+    let selectedVoice = null;
+    
+    // 우선순위대로 음성 검색
+    for (const voiceName of preferredVoices) {
+      selectedVoice = voices.find(v => v.name === voiceName && v.lang.startsWith('en'));
+      if (selectedVoice) break;
+    }
+    
+    // 우선순위 음성이 없으면 en-US 중 localService가 아닌(고품질) 음성 찾기
+    if (!selectedVoice) {
+      selectedVoice = voices.find(v => 
+        v.lang.startsWith('en-US') && !v.localService
+      );
+    }
+    
+    // 그래도 없으면 아무 en-US 음성
+    if (!selectedVoice) {
+      selectedVoice = voices.find(v => v.lang.startsWith('en-US'));
+    }
+    
+    // 음성 할당
+    if (selectedVoice) {
+      utterance.voice = selectedVoice;
+      console.log('Selected voice:', selectedVoice.name);
+    }
 
     // 이벤트 핸들러
     utterance.onstart = () => setIsSpeaking(true);
     utterance.onend = () => setIsSpeaking(false);
-    utterance.onerror = () => {
+    utterance.onerror = (event) => {
       setIsSpeaking(false);
       toast.error("음성 재생 중 오류가 발생했습니다.");
+      console.error('Speech error:', event.error);
     };
 
     window.speechSynthesis.speak(utterance);
