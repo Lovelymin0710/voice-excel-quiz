@@ -30,6 +30,10 @@ const SentencePractice = ({ sentences, onReset }: SentencePracticeProps) => {
   const [savedExpressions, setSavedExpressions] = useState<Sentence[]>([]);
   const [showSavedOnly, setShowSavedOnly] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
+  const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
+  const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
+  const [isPlayingRecording, setIsPlayingRecording] = useState(false);
+  const [audioURL, setAudioURL] = useState<string>("");
 
   const displaySentences = showSavedOnly ? savedExpressions : sentences;
   const currentSentence = displaySentences[currentIndex];
@@ -52,9 +56,19 @@ const SentencePractice = ({ sentences, onReset }: SentencePracticeProps) => {
       window.speechSynthesis.onvoiceschanged = null;
     };
   }, []);
+
+  // 오디오 URL 정리 (메모리 누수 방지)
+  useEffect(() => {
+    return () => {
+      if (audioURL) {
+        URL.revokeObjectURL(audioURL);
+      }
+    };
+  }, [audioURL]);
+
   const progress = ((currentIndex + 1) / displaySentences.length) * 100;
 
-  const startListening = () => {
+  const startListening = async () => {
     if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
       toast.error("이 브라우저는 음성 인식을 지원하지 않습니다.");
       return;
@@ -65,6 +79,33 @@ const SentencePractice = ({ sentences, onReset }: SentencePracticeProps) => {
     recognitionInstance.lang = 'en-US';
     recognitionInstance.continuous = false;
     recognitionInstance.interimResults = false;
+
+    // MediaRecorder로 음성 녹음 시작
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const recorder = new MediaRecorder(stream);
+      const audioChunks: BlobPart[] = [];
+
+      recorder.ondataavailable = (event) => {
+        audioChunks.push(event.data);
+      };
+
+      recorder.onstop = () => {
+        const blob = new Blob(audioChunks, { type: 'audio/webm' });
+        setAudioBlob(blob);
+        const url = URL.createObjectURL(blob);
+        setAudioURL(url);
+        
+        // 스트림 정리
+        stream.getTracks().forEach(track => track.stop());
+      };
+
+      recorder.start();
+      setMediaRecorder(recorder);
+    } catch (error) {
+      toast.error("마이크 접근 권한이 필요합니다.");
+      console.error('MediaRecorder error:', error);
+    }
 
     recognitionInstance.onstart = () => {
       setIsListening(true);
@@ -122,6 +163,28 @@ const SentencePractice = ({ sentences, onReset }: SentencePracticeProps) => {
       recognition.stop();
       setIsListening(false);
     }
+    
+    if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+      mediaRecorder.stop();
+    }
+  };
+
+  const playRecording = () => {
+    if (!audioURL) {
+      toast.error("녹음된 음성이 없습니다.");
+      return;
+    }
+
+    const audio = new Audio(audioURL);
+    
+    audio.onplay = () => setIsPlayingRecording(true);
+    audio.onended = () => setIsPlayingRecording(false);
+    audio.onerror = () => {
+      setIsPlayingRecording(false);
+      toast.error("음성 재생 중 오류가 발생했습니다.");
+    };
+
+    audio.play();
   };
 
   const speakSentence = (text: string) => {
@@ -185,9 +248,16 @@ const SentencePractice = ({ sentences, onReset }: SentencePracticeProps) => {
 
   const nextSentence = () => {
     if (currentIndex < displaySentences.length - 1) {
+      // 기존 오디오 URL 정리
+      if (audioURL) {
+        URL.revokeObjectURL(audioURL);
+      }
+      
       setCurrentIndex(currentIndex + 1);
       setUserAnswer("");
       setResult(null);
+      setAudioBlob(null);
+      setAudioURL("");
     } else {
       toast.success("모든 문장을 완료했습니다!");
     }
@@ -262,7 +332,19 @@ const SentencePractice = ({ sentences, onReset }: SentencePracticeProps) => {
         {userAnswer && (
           <div className="space-y-4 p-6 bg-muted rounded-lg">
             <div>
-              <div className="text-sm font-medium text-muted-foreground mb-1">You said:</div>
+              <div className="text-sm font-medium text-muted-foreground mb-1 flex items-center gap-2">
+                You said:
+                {audioBlob && (
+                  <button
+                    onClick={playRecording}
+                    className="p-1.5 rounded-full hover:bg-primary/10 transition-colors"
+                    aria-label="녹음된 음성 듣기"
+                    disabled={isPlayingRecording}
+                  >
+                    <Volume2 className={`w-5 h-5 ${isPlayingRecording ? 'text-primary animate-pulse' : 'text-muted-foreground'}`} />
+                  </button>
+                )}
+              </div>
               <div className="text-lg">{userAnswer}</div>
             </div>
 
