@@ -117,6 +117,11 @@ const SentencePractice = ({ sentences, onReset }: SentencePracticeProps) => {
       setUserAnswer(transcript);
       setIsListening(false);
       
+      // MediaRecorder도 함께 중지 (녹음 완료)
+      if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+        mediaRecorder.stop();
+      }
+      
       // 자동 채점
       const similarity = calculateSimilarity(transcript.toLowerCase(), currentSentence.영어.toLowerCase());
       const isCorrect = similarity >= 70;
