@@ -5,7 +5,7 @@ import { Mic, Square, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
 interface SpeechRecorderProps {
-  onTranscriptComplete: (transcript: string) => void;
+  onTranscriptComplete: (transcript: string, durationMs: number) => void;
   isEvaluating: boolean;
 }
 
@@ -19,6 +19,7 @@ export default function SpeechRecorder({
   const isRecordingRef = useRef(false);
   const transcriptFinalRef = useRef(""); // 최종 인식 누적 버퍼
   const shouldFinalizeRef = useRef(false); // stop 후 onend에서 마무리할지 여부
+  const startTsRef = useRef<number | null>(null);
 
   useEffect(() => {
     // Web Speech API 지원 확인
@@ -87,8 +88,10 @@ export default function SpeechRecorder({
           toast.error("음성이 인식되지 않았습니다. 다시 시도해주세요.");
           return;
         }
+        const durationMs =
+          startTsRef.current !== null ? Date.now() - startTsRef.current : 0;
         toast.success("녹음 완료! AI가 평가 중입니다...");
-        onTranscriptComplete(finalText);
+        onTranscriptComplete(finalText, durationMs);
       }
     };
 
@@ -111,6 +114,7 @@ export default function SpeechRecorder({
     setTranscript("");
     setIsRecording(true);
     isRecordingRef.current = true;
+    startTsRef.current = Date.now();
     try {
       recognitionRef.current.start();
       console.log("Recognition started successfully");
@@ -245,7 +249,9 @@ export default function SpeechRecorder({
             {/* 실시간 트랜스크립트 */}
             {transcript && (
               <div className="w-full p-4 bg-muted rounded-lg">
-                <p className="text-sm text-muted-foreground mb-2">📝 You said:</p>
+                <p className="text-sm text-muted-foreground mb-2">
+                  📝 You said:
+                </p>
                 <p className="text-base">{transcript}</p>
               </div>
             )}

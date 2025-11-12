@@ -13,12 +13,17 @@ const openai = new OpenAI({
 export async function evaluateSpeaking(
   request: EvaluationRequest
 ): Promise<AIFeedback> {
+  const durationStr = request.durationSec
+    ? `${request.durationSec} seconds`
+    : "unknown";
+
   const prompt = `You are an English speaking test evaluator (similar to OPIc).
 Evaluate the student's answer.
 
 Input:
 - Question: ${request.question}
 - Answer: ${request.answer}
+- Duration: ${durationStr}
 
 Evaluate:
 1. Grammar accuracy (0–100): Check for grammatical errors
@@ -28,7 +33,7 @@ Evaluate:
    - Feeling: Does the answer express emotions or feelings?
    - Why: Does the answer explain reasons or causes?
 4. Suggest one improved version of the answer (make it more natural and complete)
-5. Write a short Korean feedback (2-3 sentences, constructive and encouraging)
+5. Write a short Korean feedback (2-3 sentences, constructive and encouraging). If the duration is very short (<= 10 seconds) or long (>= 90 seconds), add one concise Korean sentence about the timing appropriateness.
 
 Output Format (JSON only, no markdown):
 {

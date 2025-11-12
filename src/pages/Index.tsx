@@ -25,6 +25,7 @@ const Index = () => {
   >("ALL");
   const [userAnswer, setUserAnswer] = useState("");
   const [feedback, setFeedback] = useState<AIFeedback | null>(null);
+  const [answerDurationMs, setAnswerDurationMs] = useState<number | null>(null);
   const [isEvaluating, setIsEvaluating] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -72,16 +73,21 @@ const Index = () => {
   };
 
   // 음성 인식 완료 핸들러
-  const handleTranscriptComplete = async (transcript: string) => {
+  const handleTranscriptComplete = async (
+    transcript: string,
+    durationMs: number
+  ) => {
     if (!currentQuestion) return;
 
     setUserAnswer(transcript);
+    setAnswerDurationMs(durationMs);
     setIsEvaluating(true);
 
     try {
       const result = await evaluateSpeaking({
         question: currentQuestion.question,
         answer: transcript,
+        durationSec: Math.max(1, Math.round(durationMs / 1000)),
       });
       setFeedback(result);
       toast.success("평가 완료! 결과를 확인하세요.");
@@ -217,7 +223,11 @@ const Index = () => {
           {/* 피드백이 있을 때: 결과 표시 */}
           {feedback && (
             <>
-              <AIFeedbackDisplay feedback={feedback} userAnswer={userAnswer} />
+              <AIFeedbackDisplay
+                feedback={feedback}
+                userAnswer={userAnswer}
+                durationMs={answerDurationMs ?? 0}
+              />
 
               {/* 액션 버튼 */}
               <div className="flex gap-3 justify-center">

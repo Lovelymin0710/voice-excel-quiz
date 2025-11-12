@@ -10,13 +10,18 @@ import type { AIFeedback } from "@/types/exam";
 interface AIFeedbackProps {
   feedback: AIFeedback;
   userAnswer: string;
+  durationMs?: number;
 }
 
 export default function AIFeedbackDisplay({
   feedback,
   userAnswer,
+  durationMs = 0,
 }: AIFeedbackProps) {
   const [copied, setCopied] = useState(false);
+  const minutes = Math.floor(durationMs / 60000);
+  const seconds = Math.floor((durationMs % 60000) / 1000);
+  const formattedTime = minutes > 0 ? `${minutes}m ${seconds}s` : `${seconds}s`;
 
   const getScoreColor = (score: number) => {
     if (score >= 80) return "text-green-600";
@@ -37,8 +42,11 @@ export default function AIFeedbackDisplay({
       {/* 점수 카드 */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            📊 평가 결과
+          <CardTitle className="flex items-center justify-between gap-2">
+            <span>📊 평가 결과</span>
+            <span className="text-sm text-muted-foreground">
+              ⏱️ Answer time: {formattedTime}
+            </span>
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
