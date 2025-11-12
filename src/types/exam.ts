@@ -4,6 +4,7 @@ export interface Question {
   question: string;
   category: string;
   difficulty: "IL" | "IM" | "IH" | "AL";
+  ko?: string; // 한국어 해석(선택)
 }
 
 // MP 구조 분석 결과
