@@ -151,14 +151,17 @@ const Index = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background py-8 px-4">
-      <div className="container mx-auto max-w-4xl">
+    <div
+      className="min-h-screen bg-background py-6 px-3"
+      style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 92px)" }}
+    >
+      <div className="mx-auto w-full max-w-md">
         {/* Header */}
-        <header className="text-center mb-8">
-          <h1 className="text-5xl font-bold mb-4 bg-gradient-to-r from-primary via-purple-500 to-pink-500 bg-clip-text text-transparent">
+        <header className="text-center mb-6">
+          <h1 className="text-3xl sm:text-5xl font-bold mb-2 bg-gradient-to-r from-primary via-purple-500 to-pink-500 bg-clip-text text-transparent">
             영스캐치
           </h1>
-          <p className="text-xl text-muted-foreground">
+          <p className="text-base sm:text-xl text-muted-foreground">
             🎤 영어 스피킹을 캐치하다! AI가 즉시 피드백을 드립니다.
           </p>
         </header>
@@ -173,7 +176,7 @@ const Index = () => {
                   value={selectedLevel}
                   onValueChange={(v) => applyFilter(v as any)}
                 >
-                  <SelectTrigger>
+                  <SelectTrigger className="h-10">
                     <SelectValue placeholder="ALL" />
                   </SelectTrigger>
                   <SelectContent>
@@ -190,7 +193,7 @@ const Index = () => {
             <Button
               variant="ghost"
               onClick={handleShuffle}
-              className="flex items-center gap-2"
+              className="flex items-center gap-2 h-10"
             >
               <Shuffle className="h-4 w-4" />
               문제 섞기

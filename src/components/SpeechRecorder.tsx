@@ -152,74 +152,106 @@ export default function SpeechRecorder({
   };
 
   return (
-    <Card className="w-full">
-      <CardContent className="pt-6">
-        <div className="flex flex-col items-center gap-6">
-          {/* 녹음 버튼 */}
-          <div className="relative">
-            <Button
-              size="lg"
-              className={`h-24 w-24 rounded-full ${
-                isRecording
-                  ? "bg-red-500 hover:bg-red-600 animate-pulse"
-                  : "bg-primary hover:bg-primary/90"
-              }`}
-              onClick={(e) => {
-                console.log("=== BUTTON CLICKED ===", {
-                  isRecording,
-                  isEvaluating,
-                });
-                e.preventDefault();
-                e.stopPropagation();
-                if (isRecording) {
-                  console.log("Calling stopRecording()");
-                  stopRecording();
-                } else {
-                  console.log("Calling startRecording()");
-                  startRecording();
-                }
-              }}
-              disabled={isEvaluating}
-            >
-              {isEvaluating ? (
-                <Loader2 className="h-10 w-10 animate-spin" />
-              ) : isRecording ? (
-                <Square className="h-10 w-10" />
-              ) : (
-                <Mic className="h-10 w-10" />
-              )}
-            </Button>
-            {isRecording && (
-              <div className="absolute -inset-2 bg-red-500/20 rounded-full animate-ping pointer-events-none" />
-            )}
-          </div>
-
-          {/* 상태 텍스트 */}
-          <div className="text-center">
-            {isEvaluating ? (
-              <p className="text-lg font-semibold text-primary">
-                AI가 답변을 평가하고 있습니다...
-              </p>
-            ) : isRecording ? (
-              <p className="text-lg font-semibold text-red-500">
-                🔴 녹음 중... 답변이 끝나면 버튼을 다시 눌러주세요
-              </p>
-            ) : (
-              <p className="text-lg font-semibold text-muted-foreground">
-                마이크 버튼을 눌러 답변을 시작하세요
-              </p>
-            )}
-          </div>
-
-          {/* 실시간 트랜스크립트 */}
-          {transcript && (
-            <div className="w-full p-4 bg-muted rounded-lg">
-              <p className="text-sm text-muted-foreground mb-2">📝 You said:</p>
-              <p className="text-base">{transcript}</p>
+    <>
+      {/* 모바일 하단 고정 액션바 */}
+      <div className="fixed inset-x-0 bottom-0 z-40 md:hidden">
+        <div className="mx-auto w-full max-w-md">
+          <div
+            className="border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-4 pt-2"
+            style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 8px)" }}
+          >
+            <div className="flex items-center justify-between gap-3">
+              <Button
+                size="lg"
+                className={`h-14 flex-1 ${
+                  isRecording
+                    ? "bg-red-500 hover:bg-red-600"
+                    : "bg-primary hover:bg-primary/90"
+                }`}
+                onClick={isRecording ? stopRecording : startRecording}
+                disabled={isEvaluating}
+              >
+                {isEvaluating
+                  ? "평가중..."
+                  : isRecording
+                  ? "녹음 중지"
+                  : "녹음 시작"}
+              </Button>
             </div>
-          )}
+          </div>
         </div>
-      </CardContent>
-    </Card>
+      </div>
+
+      {/* 데스크톱/태블릿용 카드 UI */}
+      <Card className="w-full hidden md:block">
+        <CardContent className="pt-6">
+          <div className="flex flex-col items-center gap-6">
+            {/* 녹음 버튼 */}
+            <div className="relative">
+              <Button
+                size="lg"
+                className={`h-16 w-16 md:h-24 md:w-24 rounded-full ${
+                  isRecording
+                    ? "bg-red-500 hover:bg-red-600 animate-pulse"
+                    : "bg-primary hover:bg-primary/90"
+                }`}
+                onClick={(e) => {
+                  console.log("=== BUTTON CLICKED ===", {
+                    isRecording,
+                    isEvaluating,
+                  });
+                  e.preventDefault();
+                  e.stopPropagation();
+                  if (isRecording) {
+                    console.log("Calling stopRecording()");
+                    stopRecording();
+                  } else {
+                    console.log("Calling startRecording()");
+                    startRecording();
+                  }
+                }}
+                disabled={isEvaluating}
+              >
+                {isEvaluating ? (
+                  <Loader2 className="h-10 w-10 animate-spin" />
+                ) : isRecording ? (
+                  <Square className="h-10 w-10" />
+                ) : (
+                  <Mic className="h-10 w-10" />
+                )}
+              </Button>
+              {isRecording && (
+                <div className="absolute -inset-2 bg-red-500/20 rounded-full animate-ping pointer-events-none" />
+              )}
+            </div>
+
+            {/* 상태 텍스트 */}
+            <div className="text-center">
+              {isEvaluating ? (
+                <p className="text-lg font-semibold text-primary">
+                  AI가 답변을 평가하고 있습니다...
+                </p>
+              ) : isRecording ? (
+                <p className="text-lg font-semibold text-red-500">
+                  🔴 녹음 중... 답변이 끝나면 버튼을 다시 눌러주세요
+                </p>
+              ) : (
+                <p className="text-lg font-semibold text-muted-foreground">
+                  마이크 버튼을 눌러 답변을 시작하세요
+                </p>
+              )}
+            </div>
+
+            {/* 실시간 트랜스크립트 */}
+            {transcript && (
+              <div className="w-full p-4 bg-muted rounded-lg">
+                <p className="text-sm text-muted-foreground mb-2">📝 You said:</p>
+                <p className="text-base">{transcript}</p>
+              </div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+    </>
   );
 }
