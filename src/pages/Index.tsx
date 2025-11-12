@@ -1,141 +1,202 @@
-import { useState } from "react";
-import * as XLSX from "xlsx";
-import { z } from "zod";
-import ExcelUploader from "@/components/ExcelUploader";
-import SentencePractice from "@/components/SentencePractice";
+import { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-
-interface Sentence {
-  순번: number;
-  한글: string;
-  영어: string;
-  암기날짜: string;
-}
-
-// Security: Validate Excel content to prevent XSS and resource exhaustion
-const sentenceSchema = z.object({
-  순번: z.union([z.number(), z.string()]).pipe(z.coerce.number().int().positive()),
-  한글: z.union([z.string(), z.number()])
-    .transform(val => String(val).trim())
-    .refine(val => val.length > 0, "한글 내용이 비어있습니다")
-    .refine(val => val.length <= 500, "한글 내용이 너무 깁니다 (최대 500자)")
-    .refine(
-      (val) => !val.startsWith('=') && !val.startsWith('+') && !val.startsWith('-') && !val.startsWith('@'),
-      "수식이 포함된 셀은 허용되지 않습니다"
-    ),
-  영어: z.union([z.string(), z.number()])
-    .transform(val => String(val).trim())
-    .refine(val => val.length > 0, "영어 내용이 비어있습니다")
-    .refine(val => val.length <= 500, "영어 내용이 너무 깁니다 (최대 500자)")
-    .refine(
-      (val) => !val.startsWith('=') && !val.startsWith('+') && !val.startsWith('-') && !val.startsWith('@'),
-      "수식이 포함된 셀은 허용되지 않습니다"
-    ),
-  암기날짜: z.union([z.string(), z.number(), z.undefined()]).transform(val => val ? String(val) : '').optional(),
-});
-
-const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
-const MAX_ROWS = 1000;
+import QuestionDisplay from "@/components/QuestionDisplay";
+import SpeechRecorder from "@/components/SpeechRecorder";
+import AIFeedbackDisplay from "@/components/AIFeedback";
+import { evaluateSpeaking } from "@/services/openai";
+import type { Question, AIFeedback } from "@/types/exam";
+import { Shuffle, RotateCcw } from "lucide-react";
 
 const Index = () => {
-  const [sentences, setSentences] = useState<Sentence[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const [questions, setQuestions] = useState<Question[]>([]);
+  const [currentQuestion, setCurrentQuestion] = useState<Question | null>(null);
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+  const [userAnswer, setUserAnswer] = useState("");
+  const [feedback, setFeedback] = useState<AIFeedback | null>(null);
+  const [isEvaluating, setIsEvaluating] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const handleFileUpload = async (file: File) => {
-    setIsLoading(true);
-    try {
-      // Security: Validate file size to prevent memory exhaustion
-      if (file.size > MAX_FILE_SIZE) {
-        toast.error("파일이 너무 큽니다. 최대 5MB까지 업로드 가능합니다.");
-        return;
-      }
-
-      const data = await file.arrayBuffer();
-      const workbook = XLSX.read(data);
-      const sheetName = workbook.SheetNames[0];
-      const worksheet = workbook.Sheets[sheetName];
-      const jsonData = XLSX.utils.sheet_to_json<Sentence>(worksheet);
-
-      if (jsonData.length === 0) {
-        toast.error("엑셀 파일에 데이터가 없습니다.");
-        return;
-      }
-
-      // Security: Limit number of rows to prevent resource exhaustion
-      if (jsonData.length > MAX_ROWS) {
-        toast.error(`파일에 데이터가 너무 많습니다. 최대 ${MAX_ROWS}개의 행까지 처리 가능합니다.`);
-        return;
-      }
-
-      // 필수 컬럼 확인
-      const firstRow = jsonData[0];
-      if (!firstRow.한글 || !firstRow.영어) {
-        toast.error("엑셀 파일 형식이 올바르지 않습니다. '한글'과 '영어' 컬럼이 필요합니다.");
-        return;
-      }
-
-      // Security: Validate and sanitize each row
-      const validatedData: Sentence[] = [];
-      for (let i = 0; i < jsonData.length; i++) {
-        try {
-          const validated = sentenceSchema.parse(jsonData[i]);
-          validatedData.push({
-            순번: validated.순번,
-            한글: validated.한글,
-            영어: validated.영어,
-            암기날짜: validated.암기날짜 || '',
-          });
-        } catch (error) {
-          if (error instanceof z.ZodError) {
-            toast.error(`${i + 1}번째 행 오류: ${error.errors[0].message}`);
-          } else {
-            toast.error(`${i + 1}번째 행을 처리할 수 없습니다.`);
-          }
-          return;
+  // exam.json 로드
+  useEffect(() => {
+    const loadQuestions = async () => {
+      try {
+        const response = await fetch("/exam.json");
+        if (!response.ok) {
+          throw new Error("Failed to load questions");
         }
-      }
+        const data: Question[] = await response.json();
 
-      // 문장 순서를 랜덤으로 섞기
-      const shuffled = [...validatedData].sort(() => Math.random() - 0.5);
-      setSentences(shuffled);
-      toast.success(`${validatedData.length}개의 문장을 불러왔습니다! (랜덤 순서)`);
-    } catch (error) {
-      // Security: Don't expose internal error details
-      if (import.meta.env.DEV) {
-        console.error("파일 읽기 오류:", error);
+        // 문제를 랜덤으로 섞기
+        const shuffled = [...data].sort(() => Math.random() - 0.5);
+        setQuestions(shuffled);
+        setCurrentQuestion(shuffled[0]);
+        setIsLoading(false);
+      } catch (error) {
+        console.error("Failed to load questions:", error);
+        toast.error("문제를 불러오는데 실패했습니다.");
+        setIsLoading(false);
       }
-      toast.error("파일을 읽는 중 오류가 발생했습니다.");
+    };
+
+    loadQuestions();
+  }, []);
+
+  // 음성 인식 완료 핸들러
+  const handleTranscriptComplete = async (transcript: string) => {
+    if (!currentQuestion) return;
+
+    setUserAnswer(transcript);
+    setIsEvaluating(true);
+
+    try {
+      const result = await evaluateSpeaking({
+        question: currentQuestion.question,
+        answer: transcript,
+      });
+      setFeedback(result);
+      toast.success("평가 완료! 결과를 확인하세요.");
+    } catch (error) {
+      console.error("Evaluation error:", error);
+      toast.error("평가 중 오류가 발생했습니다. 다시 시도해주세요.");
     } finally {
-      setIsLoading(false);
+      setIsEvaluating(false);
     }
   };
 
-  const handleReset = () => {
-    setSentences([]);
+  // 다음 문제
+  const handleNextQuestion = () => {
+    if (currentQuestionIndex + 1 < questions.length) {
+      const nextIndex = currentQuestionIndex + 1;
+      setCurrentQuestionIndex(nextIndex);
+      setCurrentQuestion(questions[nextIndex]);
+      setFeedback(null);
+      setUserAnswer("");
+    } else {
+      toast.success("모든 문제를 완료했습니다! 🎉");
+    }
   };
 
+  // 다시 답변하기
+  const handleRetry = () => {
+    setFeedback(null);
+    setUserAnswer("");
+  };
+
+  // 문제 다시 섞기
+  const handleShuffle = () => {
+    const shuffled = [...questions].sort(() => Math.random() - 0.5);
+    setQuestions(shuffled);
+    setCurrentQuestionIndex(0);
+    setCurrentQuestion(shuffled[0]);
+    setFeedback(null);
+    setUserAnswer("");
+    toast.success("문제를 다시 섞었습니다!");
+  };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-lg text-muted-foreground">문제를 불러오는 중...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!currentQuestion) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-lg text-muted-foreground">
+            문제를 불러올 수 없습니다.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-background py-12 px-4">
-      <div className="container mx-auto">
-        <header className="text-center mb-12">
-          <h1 className="text-5xl font-bold mb-4 bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
-            영어 문장 암기 확인
+    <div className="min-h-screen bg-background py-8 px-4">
+      <div className="container mx-auto max-w-4xl">
+        {/* Header */}
+        <header className="text-center mb-8">
+          <h1 className="text-5xl font-bold mb-4 bg-gradient-to-r from-primary via-purple-500 to-pink-500 bg-clip-text text-transparent">
+            영스캐치
           </h1>
           <p className="text-xl text-muted-foreground">
-            음성으로 영어 문장을 말하고 즉시 채점받으세요
+            🎤 영어 스피킹을 캐치하다! AI가 즉시 피드백을 드립니다.
           </p>
         </header>
 
-        <main className="max-w-4xl mx-auto">
-          {sentences.length === 0 ? (
-            <ExcelUploader onFileUpload={handleFileUpload} isLoading={isLoading} />
-          ) : (
-            <SentencePractice sentences={sentences} onReset={handleReset} />
+        <main className="space-y-6">
+          {/* 문제 표시 */}
+          <QuestionDisplay
+            question={currentQuestion}
+            questionNumber={currentQuestionIndex + 1}
+            totalQuestions={questions.length}
+          />
+
+          {/* 피드백이 없을 때: 녹음 UI */}
+          {!feedback && (
+            <SpeechRecorder
+              onTranscriptComplete={handleTranscriptComplete}
+              isEvaluating={isEvaluating}
+            />
           )}
+
+          {/* 피드백이 있을 때: 결과 표시 */}
+          {feedback && (
+            <>
+              <AIFeedbackDisplay feedback={feedback} userAnswer={userAnswer} />
+
+              {/* 액션 버튼 */}
+              <div className="flex gap-3 justify-center">
+                <Button
+                  size="lg"
+                  variant="outline"
+                  onClick={handleRetry}
+                  className="flex items-center gap-2"
+                >
+                  <RotateCcw className="h-5 w-5" />
+                  다시 답변하기
+                </Button>
+                <Button
+                  size="lg"
+                  onClick={handleNextQuestion}
+                  disabled={currentQuestionIndex + 1 >= questions.length}
+                  className="flex items-center gap-2"
+                >
+                  {currentQuestionIndex + 1 >= questions.length
+                    ? "마지막 문제입니다 🎉"
+                    : "다음 문제 →"}
+                </Button>
+              </div>
+            </>
+          )}
+
+          {/* 문제 섞기 버튼 */}
+          <div className="flex justify-center pt-4">
+            <Button
+              variant="ghost"
+              onClick={handleShuffle}
+              className="flex items-center gap-2"
+            >
+              <Shuffle className="h-4 w-4" />
+              문제 순서 다시 섞기
+            </Button>
+          </div>
         </main>
 
-        <footer className="text-center mt-12 text-sm text-muted-foreground">
-          <p>💡 음성 인식이 잘 안 된다면 마이크 권한을 확인하세요</p>
+        {/* Footer */}
+        <footer className="text-center mt-12 space-y-2">
+          <p className="text-sm text-muted-foreground">
+            💡 Chrome 또는 Edge 브라우저를 사용하면 음성 인식이 더 정확합니다.
+          </p>
+          <p className="text-sm text-muted-foreground">
+            🎯 오픽(OPIc) 대비에 최적화된 AI 스피킹 코치
+          </p>
         </footer>
       </div>
     </div>
