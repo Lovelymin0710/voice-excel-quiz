@@ -3,7 +3,7 @@ export interface Question {
   id: number;
   question: string;
   category: string;
-  difficulty: "beginner" | "intermediate" | "advanced";
+  difficulty: "IL" | "IM" | "IH" | "AL";
 }
 
 // MP 구조 분석 결과

@@ -7,11 +7,22 @@ import AIFeedbackDisplay from "@/components/AIFeedback";
 import { evaluateSpeaking } from "@/services/openai";
 import type { Question, AIFeedback } from "@/types/exam";
 import { Shuffle, RotateCcw } from "lucide-react";
+import {
+  Select,
+  SelectTrigger,
+  SelectContent,
+  SelectItem,
+  SelectValue,
+} from "@/components/ui/select";
 
 const Index = () => {
+  const [allQuestions, setAllQuestions] = useState<Question[]>([]);
   const [questions, setQuestions] = useState<Question[]>([]);
   const [currentQuestion, setCurrentQuestion] = useState<Question | null>(null);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+  const [selectedLevel, setSelectedLevel] = useState<
+    "ALL" | "IL" | "IM" | "IH" | "AL"
+  >("ALL");
   const [userAnswer, setUserAnswer] = useState("");
   const [feedback, setFeedback] = useState<AIFeedback | null>(null);
   const [isEvaluating, setIsEvaluating] = useState(false);
@@ -27,10 +38,11 @@ const Index = () => {
         }
         const data: Question[] = await response.json();
 
-        // 문제를 랜덤으로 섞기
-        const shuffled = [...data].sort(() => Math.random() - 0.5);
-        setQuestions(shuffled);
-        setCurrentQuestion(shuffled[0]);
+        setAllQuestions(data);
+        // 초기에는 전체에서 랜덤으로 섞기
+        const initial = [...data].sort(() => Math.random() - 0.5);
+        setQuestions(initial);
+        setCurrentQuestion(initial[0] ?? null);
         setIsLoading(false);
       } catch (error) {
         console.error("Failed to load questions:", error);
@@ -41,6 +53,23 @@ const Index = () => {
 
     loadQuestions();
   }, []);
+
+  const applyFilter = (level: "ALL" | "IL" | "IM" | "IH" | "AL") => {
+    setSelectedLevel(level);
+    const filtered =
+      level === "ALL"
+        ? allQuestions
+        : allQuestions.filter((q) => q.difficulty === level);
+    const shuffled = [...filtered].sort(() => Math.random() - 0.5);
+    setQuestions(shuffled);
+    setCurrentQuestionIndex(0);
+    setCurrentQuestion(shuffled[0] ?? null);
+    setFeedback(null);
+    setUserAnswer("");
+    if (filtered.length === 0) {
+      toast.info("선택한 등급의 문제가 없습니다.");
+    }
+  };
 
   // 음성 인식 완료 핸들러
   const handleTranscriptComplete = async (transcript: string) => {
@@ -85,10 +114,14 @@ const Index = () => {
 
   // 문제 다시 섞기
   const handleShuffle = () => {
-    const shuffled = [...questions].sort(() => Math.random() - 0.5);
+    const base =
+      selectedLevel === "ALL"
+        ? allQuestions
+        : allQuestions.filter((q) => q.difficulty === selectedLevel);
+    const shuffled = [...base].sort(() => Math.random() - 0.5);
     setQuestions(shuffled);
     setCurrentQuestionIndex(0);
-    setCurrentQuestion(shuffled[0]);
+    setCurrentQuestion(shuffled[0] ?? null);
     setFeedback(null);
     setUserAnswer("");
     toast.success("문제를 다시 섞었습니다!");
@@ -131,6 +164,38 @@ const Index = () => {
         </header>
 
         <main className="space-y-6">
+          {/* 필터 바 */}
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <span className="text-sm text-muted-foreground">OPIc 등급</span>
+              <div className="w-36">
+                <Select
+                  value={selectedLevel}
+                  onValueChange={(v) => applyFilter(v as any)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="ALL" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="ALL">ALL</SelectItem>
+                    <SelectItem value="IL">IL</SelectItem>
+                    <SelectItem value="IM">IM</SelectItem>
+                    <SelectItem value="IH">IH</SelectItem>
+                    <SelectItem value="AL">AL</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <Button
+              variant="ghost"
+              onClick={handleShuffle}
+              className="flex items-center gap-2"
+            >
+              <Shuffle className="h-4 w-4" />
+              문제 섞기
+            </Button>
+          </div>
           {/* 문제 표시 */}
           <QuestionDisplay
             question={currentQuestion}

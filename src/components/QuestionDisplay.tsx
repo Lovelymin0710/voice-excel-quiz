@@ -13,16 +13,18 @@ export default function QuestionDisplay({
   questionNumber,
   totalQuestions,
 }: QuestionDisplayProps) {
-  const getDifficultyColor = (difficulty: string) => {
-    switch (difficulty) {
-      case "beginner":
-        return "bg-green-500";
-      case "intermediate":
-        return "bg-yellow-500";
-      case "advanced":
-        return "bg-red-500";
+  const getLevelClass = (level: string) => {
+    switch (level) {
+      case "IL":
+        return "bg-gray-500 text-white";
+      case "IM":
+        return "bg-blue-500";
+      case "IH":
+        return "bg-purple-600";
+      case "AL":
+        return "bg-black text-white";
       default:
-        return "bg-gray-500";
+        return "bg-gray-500 text-white";
     }
   };
 
@@ -35,7 +37,7 @@ export default function QuestionDisplay({
           </Badge>
           <div className="flex gap-2">
             <Badge variant="secondary">{question.category}</Badge>
-            <Badge className={getDifficultyColor(question.difficulty)}>
+            <Badge className={getLevelClass(question.difficulty)}>
               {question.difficulty}
             </Badge>
           </div>
