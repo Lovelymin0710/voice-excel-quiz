@@ -107,6 +107,7 @@ const Index = () => {
       setCurrentQuestion(questions[nextIndex]);
       setFeedback(null);
       setUserAnswer("");
+      setAnswerDurationMs(null);
     } else {
       toast.success("모든 문제를 완료했습니다! 🎉");
     }
@@ -116,6 +117,7 @@ const Index = () => {
   const handleRetry = () => {
     setFeedback(null);
     setUserAnswer("");
+    setAnswerDurationMs(null);
   };
 
   // 문제 다시 섞기

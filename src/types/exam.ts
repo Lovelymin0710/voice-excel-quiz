@@ -16,11 +16,16 @@ export interface MPStructure {
 
 // AI 피드백 결과
 export interface AIFeedback {
-  grammar: number; // 문법 점수 (0-100)
-  naturalness: number; // 자연스러움 점수 (0-100)
-  mp: MPStructure; // MP 구조 분석
-  suggestion: string; // 개선된 문장
-  feedback: string; // 한글 피드백
+  grammar: number;
+  naturalness: number;
+  mp: MPStructure;
+  strengths: string[];
+  weaknesses: string[];
+  suggestions: string[];
+  improved_answer: string; // 사용자 답변을 개선한 완성된 영어 문장
+  feedback_summary: string;
+  level: "IL" | "IM1" | "IM2" | "IH";
+  tone: "encouraging" | "neutral" | "strict";
 }
 
 // 평가 요청 데이터

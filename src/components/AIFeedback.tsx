@@ -42,8 +42,13 @@ export default function AIFeedbackDisplay({
       {/* 점수 카드 */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center justify-between gap-2">
-            <span>📊 평가 결과</span>
+          <CardTitle className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+            <span className="flex items-center gap-2">
+              📊 평가 결과
+              <span className="rounded-full bg-primary/10 px-3 py-0.5 text-xs font-semibold text-primary">
+                Level: {feedback.level}
+              </span>
+            </span>
             <span className="text-sm text-muted-foreground">
               ⏱️ Answer time: {formattedTime}
             </span>
@@ -146,7 +151,7 @@ export default function AIFeedbackDisplay({
             </div>
           </div>
 
-          {/* 개선된 답변 */}
+          {/* 개선된 영어 문장 */}
           <div>
             <div className="flex items-center justify-between mb-2">
               <Badge
@@ -154,7 +159,7 @@ export default function AIFeedbackDisplay({
                 className="bg-green-100 text-green-800"
               >
                 <Lightbulb className="h-3 w-3 mr-1" />
-                Suggested Answer
+                Improved Answer
               </Badge>
 
               <Button
@@ -163,9 +168,9 @@ export default function AIFeedbackDisplay({
                 className="h-8 px-2"
                 onClick={async () => {
                   try {
-                    await navigator.clipboard.writeText(feedback.suggestion);
+                    await navigator.clipboard.writeText(feedback.improved_answer);
                     setCopied(true);
-                    toast.success("추천 답변이 복사되었습니다.");
+                    toast.success("개선된 답변이 복사되었습니다.");
                     setTimeout(() => setCopied(false), 1500);
                   } catch {
                     toast.error("복사에 실패했습니다.");
@@ -184,7 +189,58 @@ export default function AIFeedbackDisplay({
               </Button>
             </div>
             <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
-              <p className="text-base text-green-900">{feedback.suggestion}</p>
+              <p className="text-base text-green-900 leading-relaxed">
+                {feedback.improved_answer}
+              </p>
+            </div>
+          </div>
+
+          {/* 장점/약점/제안 */}
+          <div className="grid gap-4">
+            <div>
+              <Badge className="bg-green-100 text-green-800 mb-2">
+                장점 (Strengths)
+              </Badge>
+              <ul className="space-y-2 text-sm leading-relaxed">
+                {feedback.strengths.map((item, idx) => (
+                  <li key={`strength-${idx}`} className="flex gap-2">
+                    <span className="text-green-500">•</span>
+                    <span>{item}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            <div>
+              <Badge className="bg-red-100 text-red-800 mb-2">
+                약점 (Weaknesses)
+              </Badge>
+              <ul className="space-y-2 text-sm leading-relaxed">
+                {feedback.weaknesses.map((item, idx) => (
+                  <li key={`weak-${idx}`} className="flex gap-2">
+                    <span className="text-red-500">•</span>
+                    <span>{item}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            <div>
+              <Badge
+                variant="secondary"
+                className="bg-blue-100 text-blue-800 mb-2"
+              >
+                <Lightbulb className="h-3 w-3 mr-1" />
+                개선 제안 (Suggestions)
+              </Badge>
+              <ul className="space-y-2 text-sm leading-relaxed">
+                {feedback.suggestions.map((item, idx) => (
+                  <li key={`suggest-${idx}`} className="flex gap-2">
+                    <span className="text-blue-500">•</span>
+                    <span>{item}</span>
+                  </li>
+                ))}
+              </ul>
             </div>
           </div>
         </CardContent>
@@ -194,11 +250,13 @@ export default function AIFeedbackDisplay({
       <Card className="border-primary">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            🤖 AI 피드백
+            🤖 AI 총평 (Tone: {feedback.tone})
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-lg leading-relaxed">{feedback.feedback}</p>
+          <p className="text-lg leading-relaxed whitespace-pre-line">
+            {feedback.feedback_summary}
+          </p>
         </CardContent>
       </Card>
     </div>

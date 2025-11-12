@@ -17,8 +17,22 @@ export async function evaluateSpeaking(
     ? `${request.durationSec} seconds`
     : "unknown";
 
-  const prompt = `You are an English speaking test evaluator (similar to OPIc).
-Evaluate the student's answer.
+  const prompt = `You are an OPIc evaluator providing feedback in Korean.
+
+Evaluate the given English answer and respond ONLY in the JSON structure below:
+
+{
+  "grammar": number (0–100),
+  "naturalness": number (0–100),
+  "mp": { "what": boolean, "feeling": boolean, "why": boolean },
+  "strengths": [ "..." ],
+  "weaknesses": [ "..." ],
+  "suggestions": [ "..." ],
+  "improved_answer": "...",
+  "feedback_summary": "...",
+  "level": "IL|IM1|IM2|IH",
+  "tone": "encouraging|neutral|strict"
+}
 
 Input:
 - Question: ${request.question}
@@ -32,20 +46,25 @@ Evaluate:
    - What: Does the answer include concrete content/description?
    - Feeling: Does the answer express emotions or feelings?
    - Why: Does the answer explain reasons or causes?
-4. Suggest one improved version of the answer (make it more natural and complete)
-5. Write a short Korean feedback (2-3 sentences, constructive and encouraging). If the duration is very short (<= 10 seconds) or long (>= 90 seconds), add one concise Korean sentence about the timing appropriateness.
+4. Provide 1-2 sentence strengths in Korean (array).
+5. Provide 1-2 sentence weaknesses in Korean (array).
+6. Provide 1-2 short suggestions in Korean (array) that are actionable.
+7. Provide an improved_answer: Rewrite the user's answer in natural, fluent English that demonstrates better grammar, vocabulary, and structure while maintaining the original meaning. This should be a complete, polished English sentence or paragraph.
+8. Write a Korean feedback_summary in 2-3 sentences that synthesizes overall performance, includes tone, and if the duration is very short (<= 10 seconds) or long (>= 90 seconds) mention the timing appropriateness.
+9. Assign an overall OPIc level (IL, IM1, IM2, IH) and tone (encouraging, neutral, strict).
 
 Output Format (JSON only, no markdown):
 {
   "grammar": 85,
   "naturalness": 90,
-  "mp": {
-    "what": true,
-    "feeling": true,
-    "why": false
-  },
-  "suggestion": "I felt refreshed because it was my first trip after a long time.",
-  "feedback": "문법은 좋지만 이유(Why)가 부족해요. 감정 표현은 잘 했어요!"
+  "mp": { "what": true, "feeling": true, "why": false },
+  "strengths": ["..."],
+  "weaknesses": ["..."],
+  "suggestions": ["..."],
+  "improved_answer": "I recently took a memorable trip to Jeju Island with my family. It was my first vacation in a long time, so I felt incredibly refreshed and excited. We spent three days exploring beautiful beaches, hiking up Hallasan Mountain, and enjoying delicious local food.",
+  "feedback_summary": "...",
+  "level": "IM2",
+  "tone": "encouraging"
 }`;
 
   try {
