@@ -1,7 +1,10 @@
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { CheckCircle2, XCircle, Lightbulb } from "lucide-react";
+import { CheckCircle2, XCircle, Lightbulb, Copy, Check } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 import type { AIFeedback } from "@/types/exam";
 
 interface AIFeedbackProps {
@@ -13,6 +16,8 @@ export default function AIFeedbackDisplay({
   feedback,
   userAnswer,
 }: AIFeedbackProps) {
+  const [copied, setCopied] = useState(false);
+
   const getScoreColor = (score: number) => {
     if (score >= 80) return "text-green-600";
     if (score >= 60) return "text-yellow-600";
@@ -135,13 +140,41 @@ export default function AIFeedbackDisplay({
 
           {/* 개선된 답변 */}
           <div>
-            <Badge
-              variant="secondary"
-              className="mb-2 bg-green-100 text-green-800"
-            >
-              <Lightbulb className="h-3 w-3 mr-1" />
-              Suggested Answer
-            </Badge>
+            <div className="flex items-center justify-between mb-2">
+              <Badge
+                variant="secondary"
+                className="bg-green-100 text-green-800"
+              >
+                <Lightbulb className="h-3 w-3 mr-1" />
+                Suggested Answer
+              </Badge>
+
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-8 px-2"
+                onClick={async () => {
+                  try {
+                    await navigator.clipboard.writeText(feedback.suggestion);
+                    setCopied(true);
+                    toast.success("추천 답변이 복사되었습니다.");
+                    setTimeout(() => setCopied(false), 1500);
+                  } catch {
+                    toast.error("복사에 실패했습니다.");
+                  }
+                }}
+              >
+                {copied ? (
+                  <span className="inline-flex items-center gap-1">
+                    <Check className="h-3.5 w-3.5" /> Copied
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center gap-1">
+                    <Copy className="h-3.5 w-3.5" /> Copy
+                  </span>
+                )}
+              </Button>
+            </div>
             <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
               <p className="text-base text-green-900">{feedback.suggestion}</p>
             </div>
