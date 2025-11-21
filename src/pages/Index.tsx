@@ -137,10 +137,34 @@ const Index = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-lg text-muted-foreground">문제를 불러오는 중...</p>
+      <div
+        className="min-h-screen flex items-center justify-center relative overflow-hidden"
+        style={{
+          background: "#FEFEFE",
+          fontFamily: "'Pretendard', -apple-system, sans-serif",
+        }}
+      >
+        {/* 배경 장식 */}
+        <div
+          className="absolute rounded-full pointer-events-none"
+          style={{
+            top: "20%",
+            right: "10%",
+            width: "300px",
+            height: "300px",
+            background: "radial-gradient(circle, #D1C4E9 30%, #B2EBF2 80%)",
+            filter: "blur(80px)",
+            opacity: 0.5,
+          }}
+        />
+        <div className="text-center relative z-10">
+          <div
+            className="animate-spin rounded-full h-12 w-12 border-b-2 mx-auto mb-4"
+            style={{ borderColor: "#5B4D7C", borderTopColor: "transparent" }}
+          />
+          <p style={{ color: "#6A6A6A", fontSize: "18px", fontWeight: 500 }}>
+            문제를 불러오는 중...
+          </p>
         </div>
       </div>
     );
@@ -148,9 +172,15 @@ const Index = () => {
 
   if (!currentQuestion) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center">
-          <p className="text-lg text-muted-foreground">
+      <div
+        className="min-h-screen flex items-center justify-center relative overflow-hidden"
+        style={{
+          background: "#FEFEFE",
+          fontFamily: "'Pretendard', -apple-system, sans-serif",
+        }}
+      >
+        <div className="text-center relative z-10">
+          <p style={{ color: "#6A6A6A", fontSize: "18px", fontWeight: 500 }}>
             문제를 불러올 수 없습니다.
           </p>
         </div>
@@ -160,18 +190,53 @@ const Index = () => {
 
   return (
     <div
-      className="min-h-screen bg-background py-6 px-3"
-      style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 92px)" }}
+      className="min-h-screen relative overflow-hidden py-6 px-3"
+      style={{
+        background: "#FEFEFE",
+        fontFamily: "'Pretendard', -apple-system, sans-serif",
+        paddingBottom: "calc(env(safe-area-inset-bottom) + 92px)",
+      }}
     >
-      <div className="mx-auto w-full max-w-md">
+      {/* 배경 장식 원형들 */}
+      <div
+        className="absolute rounded-full pointer-events-none"
+        style={{
+          top: "5%",
+          left: "5%",
+          width: "200px",
+          height: "200px",
+          background: "radial-gradient(circle, #E1BEE7 20%, #D1C4E9 80%)",
+          filter: "blur(70px)",
+          opacity: 0.6,
+        }}
+      />
+      <div
+        className="absolute rounded-full pointer-events-none"
+        style={{
+          bottom: "10%",
+          right: "5%",
+          width: "250px",
+          height: "250px",
+          background: "radial-gradient(circle, #B2DFDB 25%, #80CBC4 75%)",
+          filter: "blur(75px)",
+          opacity: 0.5,
+        }}
+      />
+
+      <div className="mx-auto w-full max-w-md relative z-10">
         {/* Header */}
         <header className="text-center mb-6">
-          <h1 className="text-3xl sm:text-5xl font-bold mb-2 bg-gradient-to-r from-primary via-purple-500 to-pink-500 bg-clip-text text-transparent">
-            영스캐치
+          <h1
+            className="font-bold mb-2"
+            style={{
+              fontSize: "clamp(28px, 6vw, 40px)",
+              color: "#5B4D7C",
+              fontWeight: 700,
+              letterSpacing: "-0.02em",
+            }}
+          >
+            Youngs Catch AI
           </h1>
-          <p className="text-base sm:text-xl text-muted-foreground">
-            🎤 영어 스피킹을 캐치하다! AI가 즉시 피드백을 드립니다.
-          </p>
         </header>
 
         <main className="space-y-6">
@@ -198,14 +263,21 @@ const Index = () => {
               </div>
             </div>
 
-            <Button
-              variant="ghost"
+            <button
               onClick={handleShuffle}
-              className="flex items-center gap-2 h-10"
+              className="flex items-center gap-2 h-10 px-4 rounded-lg transition-all duration-200 hover:bg-opacity-80"
+              style={{
+                background:
+                  "linear-gradient(100deg, #B39DDB 0%, #CE93D8 42%, #F8BBD0 100%)",
+                color: "white",
+                fontWeight: 600,
+                fontSize: "14px",
+                boxShadow: "0 4px 12px rgba(179, 157, 219, 0.3)",
+              }}
             >
               <Shuffle className="h-4 w-4" />
               문제 섞기
-            </Button>
+            </button>
           </div>
           {/* 문제 표시 */}
           <QuestionDisplay
@@ -233,51 +305,62 @@ const Index = () => {
 
               {/* 액션 버튼 */}
               <div className="flex gap-3 justify-center">
-                <Button
-                  size="lg"
-                  variant="outline"
+                <button
                   onClick={handleRetry}
-                  className="flex items-center gap-2"
+                  className="flex items-center gap-2 h-12 px-6 rounded-xl transition-all duration-200 active:scale-[0.98]"
+                  style={{
+                    background: "white",
+                    color: "#5B4D7C",
+                    fontWeight: 600,
+                    fontSize: "16px",
+                    border: "1px solid #E0E0E0",
+                    boxShadow: "0 2px 8px rgba(0, 0, 0, 0.05)",
+                  }}
                 >
                   <RotateCcw className="h-5 w-5" />
                   다시 답변하기
-                </Button>
-                <Button
-                  size="lg"
+                </button>
+                <button
                   onClick={handleNextQuestion}
                   disabled={currentQuestionIndex + 1 >= questions.length}
-                  className="flex items-center gap-2"
+                  className="flex items-center gap-2 h-12 px-6 rounded-xl transition-all duration-200 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
+                  style={{
+                    background:
+                      "linear-gradient(100deg, #B39DDB 0%, #CE93D8 42%, #F8BBD0 100%)",
+                    color: "white",
+                    fontWeight: 700,
+                    fontSize: "16px",
+                    boxShadow:
+                      "0 8px 24px rgba(179, 157, 219, 0.4), inset 0 -2px 8px rgba(0,0,0,0.1)",
+                  }}
                 >
                   {currentQuestionIndex + 1 >= questions.length
                     ? "마지막 문제입니다 🎉"
                     : "다음 문제 →"}
-                </Button>
+                </button>
               </div>
             </>
           )}
 
           {/* 문제 섞기 버튼 */}
           <div className="flex justify-center pt-4">
-            <Button
-              variant="ghost"
+            <button
               onClick={handleShuffle}
-              className="flex items-center gap-2"
+              className="flex items-center gap-2 h-10 px-4 rounded-lg transition-all duration-200 hover:bg-opacity-80"
+              style={{
+                background:
+                  "linear-gradient(100deg, #B39DDB 0%, #CE93D8 42%, #F8BBD0 100%)",
+                color: "white",
+                fontWeight: 600,
+                fontSize: "14px",
+                boxShadow: "0 4px 12px rgba(179, 157, 219, 0.3)",
+              }}
             >
               <Shuffle className="h-4 w-4" />
               문제 순서 다시 섞기
-            </Button>
+            </button>
           </div>
         </main>
-
-        {/* Footer */}
-        <footer className="text-center mt-12 space-y-2">
-          <p className="text-sm text-muted-foreground">
-            💡 Chrome 또는 Edge 브라우저를 사용하면 음성 인식이 더 정확합니다.
-          </p>
-          <p className="text-sm text-muted-foreground">
-            🎯 오픽(OPIc) 대비에 최적화된 AI 스피킹 코치
-          </p>
-        </footer>
       </div>
     </div>
   );

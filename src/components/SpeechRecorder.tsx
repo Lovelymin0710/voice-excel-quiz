@@ -1,6 +1,4 @@
 import { useState, useRef, useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { Mic, Square, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -161,103 +159,168 @@ export default function SpeechRecorder({
       <div className="fixed inset-x-0 bottom-0 z-40 md:hidden">
         <div className="mx-auto w-full max-w-md">
           <div
-            className="border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-4 pt-2"
-            style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 8px)" }}
+            className="border-t px-4 pt-2 backdrop-blur-sm"
+            style={{
+              background: "rgba(255, 255, 255, 0.95)",
+              borderColor: "#F0F0F0",
+              paddingBottom: "calc(env(safe-area-inset-bottom) + 8px)",
+            }}
           >
             <div className="flex items-center justify-between gap-3">
-              <Button
-                size="lg"
-                className={`h-14 flex-1 ${
-                  isRecording
-                    ? "bg-red-500 hover:bg-red-600"
-                    : "bg-primary hover:bg-primary/90"
-                }`}
+              <button
                 onClick={isRecording ? stopRecording : startRecording}
                 disabled={isEvaluating}
+                className="h-14 flex-1 rounded-xl font-bold text-white transition-all duration-200 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
+                style={{
+                  fontFamily: "'Pretendard', -apple-system, sans-serif",
+                  fontSize: "16px",
+                  fontWeight: 700,
+                  background: isRecording
+                    ? "linear-gradient(100deg, #F44336 0%, #E91E63 100%)"
+                    : "linear-gradient(100deg, #B39DDB 0%, #CE93D8 42%, #F8BBD0 100%)",
+                  boxShadow: isRecording
+                    ? "0 8px 24px rgba(244, 67, 54, 0.4), inset 0 -2px 8px rgba(0,0,0,0.1)"
+                    : "0 8px 24px rgba(179, 157, 219, 0.4), inset 0 -2px 8px rgba(0,0,0,0.1)",
+                }}
               >
                 {isEvaluating
                   ? "평가중..."
                   : isRecording
                   ? "녹음 중지"
                   : "녹음 시작"}
-              </Button>
+              </button>
             </div>
           </div>
         </div>
       </div>
 
       {/* 데스크톱/태블릿용 카드 UI */}
-      <Card className="w-full hidden md:block">
-        <CardContent className="pt-6">
-          <div className="flex flex-col items-center gap-6">
-            {/* 녹음 버튼 */}
-            <div className="relative">
-              <Button
-                size="lg"
-                className={`h-16 w-16 md:h-24 md:w-24 rounded-full ${
-                  isRecording
-                    ? "bg-red-500 hover:bg-red-600 animate-pulse"
-                    : "bg-primary hover:bg-primary/90"
-                }`}
-                onClick={(e) => {
-                  console.log("=== BUTTON CLICKED ===", {
-                    isRecording,
-                    isEvaluating,
-                  });
-                  e.preventDefault();
-                  e.stopPropagation();
-                  if (isRecording) {
-                    console.log("Calling stopRecording()");
-                    stopRecording();
-                  } else {
-                    console.log("Calling startRecording()");
-                    startRecording();
-                  }
-                }}
-                disabled={isEvaluating}
-              >
-                {isEvaluating ? (
-                  <Loader2 className="h-10 w-10 animate-spin" />
-                ) : isRecording ? (
-                  <Square className="h-10 w-10" />
-                ) : (
-                  <Mic className="h-10 w-10" />
-                )}
-              </Button>
-              {isRecording && (
-                <div className="absolute -inset-2 bg-red-500/20 rounded-full animate-ping pointer-events-none" />
-              )}
-            </div>
-
-            {/* 상태 텍스트 */}
-            <div className="text-center">
+      <div
+        className="w-full hidden md:block rounded-2xl p-6"
+        style={{
+          background: "white",
+          boxShadow: "0 4px 20px rgba(0, 0, 0, 0.06)",
+          border: "1px solid #F0F0F0",
+        }}
+      >
+        <div className="flex flex-col items-center gap-6">
+          {/* 녹음 버튼 */}
+          <div className="relative">
+            <button
+              onClick={(e) => {
+                console.log("=== BUTTON CLICKED ===", {
+                  isRecording,
+                  isEvaluating,
+                });
+                e.preventDefault();
+                e.stopPropagation();
+                if (isRecording) {
+                  console.log("Calling stopRecording()");
+                  stopRecording();
+                } else {
+                  console.log("Calling startRecording()");
+                  startRecording();
+                }
+              }}
+              disabled={isEvaluating}
+              className={`h-16 w-16 md:h-24 md:w-24 rounded-full flex items-center justify-center transition-all duration-200 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed ${
+                isRecording ? "animate-pulse" : ""
+              }`}
+              style={{
+                fontFamily: "'Pretendard', -apple-system, sans-serif",
+                background: isRecording
+                  ? "linear-gradient(100deg, #F44336 0%, #E91E63 100%)"
+                  : "linear-gradient(100deg, #B39DDB 0%, #CE93D8 42%, #F8BBD0 100%)",
+                boxShadow: isRecording
+                  ? "0 12px 32px rgba(244, 67, 54, 0.5), inset 0 -3px 10px rgba(0,0,0,0.15), inset 0 2px 8px rgba(255,255,255,0.3)"
+                  : "0 12px 32px rgba(179, 157, 219, 0.5), inset 0 -3px 10px rgba(0,0,0,0.15), inset 0 2px 8px rgba(255,255,255,0.3)",
+                color: "white",
+              }}
+            >
               {isEvaluating ? (
-                <p className="text-lg font-semibold text-primary">
-                  AI가 답변을 평가하고 있습니다...
-                </p>
+                <Loader2 className="h-10 w-10 animate-spin" />
               ) : isRecording ? (
-                <p className="text-lg font-semibold text-red-500">
-                  🔴 녹음 중... 답변이 끝나면 버튼을 다시 눌러주세요
-                </p>
+                <Square className="h-10 w-10" />
               ) : (
-                <p className="text-lg font-semibold text-muted-foreground">
-                  마이크 버튼을 눌러 답변을 시작하세요
-                </p>
+                <Mic className="h-10 w-10" />
               )}
-            </div>
-
-            {/* 실시간 트랜스크립트 */}
-            {transcript && (
-              <div className="w-full p-4 bg-muted rounded-lg">
-                <p className="text-sm text-muted-foreground mb-2">
-                  📝 You said:
-                </p>
-                <p className="text-base">{transcript}</p>
-              </div>
+            </button>
+            {isRecording && (
+              <div className="absolute -inset-2 bg-red-500/20 rounded-full animate-ping pointer-events-none" />
             )}
           </div>
-        </CardContent>
-      </Card>
+
+          {/* 상태 텍스트 */}
+          <div className="text-center">
+            {isEvaluating ? (
+              <p
+                style={{
+                  fontSize: "18px",
+                  fontWeight: 600,
+                  color: "#5B4D7C",
+                  fontFamily: "'Pretendard', -apple-system, sans-serif",
+                }}
+              >
+                AI가 답변을 평가하고 있습니다...
+              </p>
+            ) : isRecording ? (
+              <p
+                style={{
+                  fontSize: "18px",
+                  fontWeight: 600,
+                  color: "#F44336",
+                  fontFamily: "'Pretendard', -apple-system, sans-serif",
+                }}
+              >
+                🔴 녹음 중... 답변이 끝나면 버튼을 다시 눌러주세요
+              </p>
+            ) : (
+              <p
+                style={{
+                  fontSize: "18px",
+                  fontWeight: 600,
+                  color: "#6A6A6A",
+                  fontFamily: "'Pretendard', -apple-system, sans-serif",
+                }}
+              >
+                마이크 버튼을 눌러 답변을 시작하세요
+              </p>
+            )}
+          </div>
+
+          {/* 실시간 트랜스크립트 */}
+          {transcript && (
+            <div
+              className="w-full p-4 rounded-xl"
+              style={{
+                background: "#F7F7F7",
+              }}
+            >
+              <p
+                style={{
+                  fontSize: "14px",
+                  color: "#6A6A6A",
+                  marginBottom: "8px",
+                  fontWeight: 500,
+                  fontFamily: "'Pretendard', -apple-system, sans-serif",
+                }}
+              >
+                📝 You said:
+              </p>
+              <p
+                style={{
+                  fontSize: "16px",
+                  color: "#111111",
+                  lineHeight: "1.6",
+                  fontFamily: "'Pretendard', -apple-system, sans-serif",
+                }}
+              >
+                {transcript}
+              </p>
+            </div>
+          )}
+        </div>
+      </div>
     </>
   );
 }
