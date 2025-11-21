@@ -1,5 +1,5 @@
-import type { VercelRequest, VercelResponse } from '@vercel/node';
-import OpenAI from 'openai';
+import type { VercelRequest, VercelResponse } from "@vercel/node";
+import OpenAI from "openai";
 
 // 타입 정의 (프론트엔드와 공유)
 interface EvaluationRequest {
@@ -34,42 +34,163 @@ interface AIFeedback {
   tone: "encouraging" | "neutral" | "strict";
 }
 
+// ===== 보안: API 키 체크 =====
+if (!process.env.OPENAI_API_KEY) {
+  throw new Error("OPENAI_API_KEY 환경 변수가 설정되지 않았습니다.");
+}
+
 // OpenAI 클라이언트 (서버에서만 초기화)
 const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY, // VITE_ 접두사 제거!
+  apiKey: process.env.OPENAI_API_KEY,
 });
 
-export default async function handler(
-  req: VercelRequest,
-  res: VercelResponse
-) {
-  // CORS 설정
-  res.setHeader('Access-Control-Allow-Credentials', 'true');
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,POST');
-  res.setHeader(
-    'Access-Control-Allow-Headers',
-    'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version'
-  );
+// ===== 보안: 허용된 도메인 설정 =====
+const allowedOrigins = [
+  "https://voice-excel-quiz.lovable.app",
+  "https://youngscatch.vercel.app",
+  process.env.NODE_ENV === "development" ? "http://localhost:3000" : null,
+  process.env.NODE_ENV === "development" ? "http://localhost:8080" : null,
+  process.env.NODE_ENV === "development" ? "http://localhost:5173" : null,
+].filter((origin): origin is string => origin !== null);
+
+// ===== 보안: Rate Limiting (간단한 메모리 기반) =====
+interface RateLimitRecord {
+  count: number;
+  resetTime: number;
+}
+
+const requestCache = new Map<string, RateLimitRecord>();
+
+function checkRateLimit(identifier: string): {
+  allowed: boolean;
+  remaining: number;
+  resetTime: number;
+} {
+  const now = Date.now();
+  const record = requestCache.get(identifier);
+  const limit = 20; // 1시간에 20회
+  const windowMs = 3600000; // 1시간
+
+  // 기록이 없거나 시간이 만료된 경우
+  if (!record || now > record.resetTime) {
+    const resetTime = now + windowMs;
+    requestCache.set(identifier, { count: 1, resetTime });
+    return { allowed: true, remaining: limit - 1, resetTime };
+  }
+
+  // 제한 초과
+  if (record.count >= limit) {
+    return { allowed: false, remaining: 0, resetTime: record.resetTime };
+  }
+
+  // 카운트 증가
+  record.count++;
+  return {
+    allowed: true,
+    remaining: limit - record.count,
+    resetTime: record.resetTime,
+  };
+}
+
+// 주기적으로 오래된 기록 정리 (메모리 누수 방지)
+setInterval(() => {
+  const now = Date.now();
+  for (const [key, record] of requestCache.entries()) {
+    if (now > record.resetTime) {
+      requestCache.delete(key);
+    }
+  }
+}, 600000); // 10분마다
+
+// ===== 보안: 입력 검증 (sanitize) =====
+function sanitizeInput(input: string, maxLength: number = 1000): string {
+  return input
+    .replace(/[\n\r]/g, " ") // 개행 제거 (Prompt Injection 방지)
+    .replace(/[<>]/g, "") // HTML 태그 제거
+    .replace(/["'`]/g, "") // 따옴표 제거 (Prompt 조작 방지)
+    .trim()
+    .slice(0, maxLength); // 최대 길이 제한
+}
+
+function validateInput(data: any): { valid: boolean; error?: string } {
+  if (!data.question || typeof data.question !== "string") {
+    return { valid: false, error: "question 필드가 필요합니다." };
+  }
+  if (!data.answer || typeof data.answer !== "string") {
+    return { valid: false, error: "answer 필드가 필요합니다." };
+  }
+  if (data.question.length < 10 || data.question.length > 500) {
+    return { valid: false, error: "question은 10-500자 사이여야 합니다." };
+  }
+  if (data.answer.length < 5 || data.answer.length > 2000) {
+    return { valid: false, error: "answer는 5-2000자 사이여야 합니다." };
+  }
+  if (data.durationSec !== undefined) {
+    const duration = Number(data.durationSec);
+    if (isNaN(duration) || duration < 0 || duration > 300) {
+      return { valid: false, error: "durationSec은 0-300 사이여야 합니다." };
+    }
+  }
+  return { valid: true };
+}
+
+export default async function handler(req: VercelRequest, res: VercelResponse) {
+  // ===== 보안: CORS 설정 (특정 도메인만 허용) =====
+  const origin = req.headers.origin;
+
+  if (origin && allowedOrigins.includes(origin)) {
+    res.setHeader("Access-Control-Allow-Origin", origin);
+    res.setHeader("Access-Control-Allow-Credentials", "true");
+  }
+
+  res.setHeader("Access-Control-Allow-Methods", "POST,OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, X-Session-ID");
 
   // OPTIONS 요청 처리 (CORS preflight)
-  if (req.method === 'OPTIONS') {
+  if (req.method === "OPTIONS") {
     res.status(200).end();
     return;
   }
 
   // POST만 허용
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
+  if (req.method !== "POST") {
+    return res.status(405).json({ error: "Method not allowed" });
+  }
+
+  // ===== 보안: Rate Limiting =====
+  const identifier =
+    (req.headers["x-forwarded-for"] as string) ||
+    (req.headers["x-session-id"] as string) ||
+    "unknown";
+  const rateLimit = checkRateLimit(identifier);
+
+  // Rate Limit 헤더 추가
+  res.setHeader("X-RateLimit-Limit", "20");
+  res.setHeader("X-RateLimit-Remaining", rateLimit.remaining.toString());
+  res.setHeader(
+    "X-RateLimit-Reset",
+    new Date(rateLimit.resetTime).toISOString()
+  );
+
+  if (!rateLimit.allowed) {
+    return res.status(429).json({
+      error: "너무 많은 요청입니다. 1시간에 20회까지 사용 가능합니다.",
+      retryAfter: Math.ceil((rateLimit.resetTime - Date.now()) / 1000),
+    });
   }
 
   try {
-    const { question, answer, durationSec }: EvaluationRequest = req.body;
-
-    if (!question || !answer) {
-      return res.status(400).json({ error: 'Missing required fields' });
+    // ===== 보안: 입력 검증 =====
+    const validation = validateInput(req.body);
+    if (!validation.valid) {
+      return res.status(400).json({ error: validation.error });
     }
 
+    const { question, answer, durationSec } = req.body as EvaluationRequest;
+
+    // ===== 보안: 입력 Sanitize (Prompt Injection 방어) =====
+    const sanitizedQuestion = sanitizeInput(question, 500);
+    const sanitizedAnswer = sanitizeInput(answer, 2000);
     const durationStr = durationSec ? `${durationSec} seconds` : "unknown";
 
     const prompt = `You are an OPIc evaluator specialized for BEGINNERS (입문자) providing feedback in Korean.
@@ -103,8 +224,8 @@ Evaluate the given English answer and respond ONLY in the JSON structure below:
 }
 
 Input:
-- Question: ${question}
-- Answer: ${answer}
+- Question: ${sanitizedQuestion}
+- Answer: ${sanitizedAnswer}
 - Duration: ${durationStr}
 
 Evaluate:
@@ -173,7 +294,8 @@ Output Format (JSON only, no markdown):
       messages: [
         {
           role: "system",
-          content: "You are an expert English speaking test evaluator. Always respond with valid JSON only.",
+          content:
+            "You are an expert English speaking test evaluator. Always respond with valid JSON only.",
         },
         {
           role: "user",
@@ -191,12 +313,22 @@ Output Format (JSON only, no markdown):
 
     const feedback: AIFeedback = JSON.parse(result);
     return res.status(200).json(feedback);
-
   } catch (error) {
-    console.error('OpenAI API Error:', error);
-    return res.status(500).json({ 
-      error: 'AI 평가 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.' 
+    // ===== 보안: 에러 정보 노출 방지 =====
+    if (process.env.NODE_ENV === "production") {
+      console.error(
+        "API Error:",
+        error instanceof Error ? error.message : "Unknown error"
+      );
+    } else {
+      console.error("OpenAI API Error:", error);
+    }
+
+    return res.status(500).json({
+      error: "AI 평가 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.",
+      ...(process.env.NODE_ENV === "development" && {
+        debug: error instanceof Error ? error.message : String(error),
+      }),
     });
   }
 }
-

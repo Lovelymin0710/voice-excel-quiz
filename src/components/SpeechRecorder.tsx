@@ -2,6 +2,46 @@ import { useState, useRef, useEffect } from "react";
 import { Mic, Square, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
+// ===== 타입 안전성: Web Speech API 타입 정의 =====
+interface SpeechRecognitionEvent {
+  results: SpeechRecognitionResultList;
+  resultIndex: number;
+}
+
+interface SpeechRecognitionErrorEvent {
+  error: string;
+  message?: string;
+}
+
+interface SpeechRecognitionResultList {
+  length: number;
+  item(index: number): SpeechRecognitionResult;
+  [index: number]: SpeechRecognitionResult;
+}
+
+interface SpeechRecognitionResult {
+  [index: number]: SpeechRecognitionAlternative;
+  isFinal: boolean;
+  length: number;
+}
+
+interface SpeechRecognitionAlternative {
+  transcript: string;
+  confidence: number;
+}
+
+interface SpeechRecognition extends EventTarget {
+  continuous: boolean;
+  interimResults: boolean;
+  lang: string;
+  start(): void;
+  stop(): void;
+  abort(): void;
+  onresult: ((event: SpeechRecognitionEvent) => void) | null;
+  onerror: ((event: SpeechRecognitionErrorEvent) => void) | null;
+  onend: (() => void) | null;
+}
+
 interface SpeechRecorderProps {
   onTranscriptComplete: (transcript: string, durationMs: number) => void;
   isEvaluating: boolean;
@@ -13,7 +53,7 @@ export default function SpeechRecorder({
 }: SpeechRecorderProps) {
   const [isRecording, setIsRecording] = useState(false);
   const [transcript, setTranscript] = useState("");
-  const recognitionRef = useRef<any>(null);
+  const recognitionRef = useRef<SpeechRecognition | null>(null);
   const isRecordingRef = useRef(false);
   const transcriptFinalRef = useRef(""); // 최종 인식 누적 버퍼
   const shouldFinalizeRef = useRef(false); // stop 후 onend에서 마무리할지 여부
@@ -40,7 +80,7 @@ export default function SpeechRecorder({
     recognitionRef.current.interimResults = true;
     recognitionRef.current.lang = "en-US";
 
-    recognitionRef.current.onresult = (event: any) => {
+    recognitionRef.current.onresult = (event: SpeechRecognitionEvent) => {
       let interim = "";
 
       for (let i = event.resultIndex; i < event.results.length; i++) {
@@ -56,7 +96,7 @@ export default function SpeechRecorder({
       setTranscript((transcriptFinalRef.current + interim).trim());
     };
 
-    recognitionRef.current.onerror = (event: any) => {
+    recognitionRef.current.onerror = (event: SpeechRecognitionErrorEvent) => {
       console.error("Speech recognition error:", event.error);
       // 사용자가 중지해서 abort된 경우는 정상 종료로 간주
       if (event.error === "aborted") {
