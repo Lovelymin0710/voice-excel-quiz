@@ -17,14 +17,27 @@ export async function evaluateSpeaking(
     ? `${request.durationSec} seconds`
     : "unknown";
 
-  const prompt = `You are an OPIc evaluator providing feedback in Korean.
+  const prompt = `You are an OPIc evaluator specialized for BEGINNERS (입문자) providing feedback in Korean.
+
+🎯 IMPORTANT: This service is for OPIc BEGINNERS who struggle with:
+- Constructing English sentences (not grammar mistakes)
+- Starting their first sentence
+- Using fillers naturally
+- Following logical structure
+
+Focus on STRUCTURE, LOGIC, and FILLER usage, NOT on advanced grammar or vocabulary.
 
 Evaluate the given English answer and respond ONLY in the JSON structure below:
 
 {
-  "grammar": number (0–100),
-  "naturalness": number (0–100),
+  "structure_score": number (0–100),
+  "logic_flow": number (0–100),
   "mp": { "what": boolean, "feeling": boolean, "why": boolean },
+  "filler_usage": {
+    "used_fillers": ["Actually", "For example"],
+    "count": number,
+    "feedback": "Korean feedback about filler usage"
+  },
   "strengths": [ "..." ],
   "weaknesses": [ "..." ],
   "suggestions": [ "..." ],
@@ -40,30 +53,63 @@ Input:
 - Duration: ${durationStr}
 
 Evaluate:
-1. Grammar accuracy (0–100): Check for grammatical errors
-2. Naturalness (0–100): How natural and fluent the answer sounds
-3. MP structure (What, Feeling, Why):
-   - What: Does the answer include concrete content/description?
-   - Feeling: Does the answer express emotions or feelings?
-   - Why: Does the answer explain reasons or causes?
-4. Provide 1-2 sentence strengths in Korean (array).
-5. Provide 1-2 sentence weaknesses in Korean (array).
-6. Provide 1-2 short suggestions in Korean (array) that are actionable.
-7. Provide an improved_answer: Rewrite the user's answer in natural, fluent English that demonstrates better grammar, vocabulary, and structure while maintaining the original meaning. This should be a complete, polished English sentence or paragraph.
-8. Write a Korean feedback_summary in 2-3 sentences that synthesizes overall performance, includes tone, and if the duration is very short (<= 10 seconds) or long (>= 90 seconds) mention the timing appropriateness.
-9. Assign an overall OPIc level (IL, IM1, IM2, IH) and tone (encouraging, neutral, strict).
+1. Structure Score (0–100): Does the answer follow a logical structure? (Start → Reason → Example → Wrap-up)
+   - NOT about grammar correctness, but about having clear beginning, middle, and end
+   - 90+ if all 4 parts present, 70-89 if 3 parts, 50-69 if 2 parts, <50 if unclear structure
+
+2. Logic Flow (0–100): Is the flow of ideas coherent and easy to follow?
+   - Does each sentence connect to the next?
+   - Is there a clear progression of thought?
+   - NOT about pronunciation or grammar, but about logical connection
+
+3. MP structure (What, Feeling, Why) - check if present in the answer
+
+4. Filler Usage Analysis:
+   - Identify fillers used (Actually, For example, To be honest, Personally, I guess, Honestly, For me, etc.)
+   - Count total usage
+   - Provide encouraging Korean feedback:
+     * If 0 fillers: "필러를 사용하지 않았어요. 'Actually'나 'For example' 같은 필러를 3번 이상 사용하면 말하기가 훨씬 자연스러워질 거예요!"
+     * If 1-2 fillers: "필러를 조금 사용했네요! 다음엔 3번 이상 사용해보세요."
+     * If 3+ fillers: "훌륭해요! 필러를 자주 사용해서 답변이 자연스러웠어요."
+
+5. Strengths (1-2 sentences in Korean): Focus on what the BEGINNER did well
+   - Did they attempt to follow structure?
+   - Did they use fillers?
+   - Did they try to explain with examples?
+   
+6. Weaknesses (1-2 sentences in Korean): GENTLE feedback for beginners
+   - Missing structure parts?
+   - Could use more fillers?
+   - Logic jumps too quickly?
+   
+7. Suggestions (1-2 actionable tips in Korean for BEGINNERS):
+   - NOT "use advanced vocabulary" or "fix grammar"
+   - INSTEAD: "다음엔 'For example'로 예시를 추가해보세요", "이유를 'The reason is...'로 시작해보세요"
+
+8. Improved Answer: Rewrite in natural English maintaining beginner-friendly structure with fillers included
+
+9. Feedback Summary (2-3 Korean sentences): Warm, encouraging tone for beginners
+   - If duration <= 10s: mention it's too short
+   - If duration >= 90s: praise their speaking stamina!
+
+10. Level (IL, IM1, IM2, IH) and Tone (always "encouraging" for beginners unless IM2+)
 
 Output Format (JSON only, no markdown):
 {
-  "grammar": 85,
-  "naturalness": 90,
+  "structure_score": 75,
+  "logic_flow": 80,
   "mp": { "what": true, "feeling": true, "why": false },
-  "strengths": ["..."],
-  "weaknesses": ["..."],
-  "suggestions": ["..."],
-  "improved_answer": "I recently took a memorable trip to Jeju Island with my family. It was my first vacation in a long time, so I felt incredibly refreshed and excited. We spent three days exploring beautiful beaches, hiking up Hallasan Mountain, and enjoying delicious local food.",
-  "feedback_summary": "...",
-  "level": "IM2",
+  "filler_usage": {
+    "used_fillers": ["Actually", "For example"],
+    "count": 2,
+    "feedback": "필러를 2번 사용했어요! 다음엔 3번 이상 사용해보면 더 자연스러울 거예요."
+  },
+  "strengths": ["문장 구조를 따라가려고 노력했어요!", "예시를 들어서 설명하려고 했어요."],
+  "weaknesses": ["이유 부분이 빠져있어요.", "필러를 조금 더 사용하면 좋겠어요."],
+  "suggestions": ["다음엔 'The reason is...'로 이유를 추가해보세요.", "답변 시작을 'To be honest'로 열어보세요."],
+  "improved_answer": "To be honest, I recently took a trip to Jeju Island with my family. The reason I enjoyed it was that it was my first vacation in a long time. For example, we explored beautiful beaches and hiked up Hallasan Mountain. So overall, it was an unforgettable experience.",
+  "feedback_summary": "문장 구조를 따라가려고 노력한 점이 좋았어요! 다음엔 필러를 3번 이상 사용하고, 이유 부분을 추가하면 IM1 레벨로 올라갈 수 있을 거예요. 입문자로서 아주 잘하고 있어요!",
+  "level": "IL",
   "tone": "encouraging"
 }`;
 

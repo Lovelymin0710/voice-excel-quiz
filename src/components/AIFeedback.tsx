@@ -81,7 +81,7 @@ export default function AIFeedbackDisplay({
           </div>
         </div>
         <div className="space-y-6">
-          {/* Grammar Score */}
+          {/* Structure Score (입문자 맞춤) */}
           <div>
             <div className="flex items-center justify-between mb-2">
               <span
@@ -91,31 +91,31 @@ export default function AIFeedbackDisplay({
                   color: "#111111",
                 }}
               >
-                문법 정확도 (Grammar)
+                📝 구조 완성도 (Structure)
               </span>
               <span
                 className="text-2xl font-bold"
                 style={{
-                  color: getScoreColor(feedback.grammar),
+                  color: getScoreColor(feedback.structure_score),
                 }}
               >
-                {feedback.grammar}점
+                {feedback.structure_score}점
               </span>
             </div>
-            <Progress value={feedback.grammar} className="h-3" />
+            <Progress value={feedback.structure_score} className="h-3" />
             <p
               style={{
-                fontSize: "14px",
+                fontSize: "13px",
                 color: "#6A6A6A",
                 marginTop: "8px",
                 fontWeight: 500,
               }}
             >
-              {getScoreLabel(feedback.grammar)}
+              {getScoreLabel(feedback.structure_score)} · Start → Reason → Example → Wrap-up 구조를 따라갔나요?
             </p>
           </div>
 
-          {/* Naturalness Score */}
+          {/* Logic Flow (입문자 맞춤) */}
           <div>
             <div className="flex items-center justify-between mb-2">
               <span
@@ -125,27 +125,85 @@ export default function AIFeedbackDisplay({
                   color: "#111111",
                 }}
               >
-                자연스러움 (Naturalness)
+                🔗 논리 흐름 (Logic Flow)
               </span>
               <span
                 className="text-2xl font-bold"
                 style={{
-                  color: getScoreColor(feedback.naturalness),
+                  color: getScoreColor(feedback.logic_flow),
                 }}
               >
-                {feedback.naturalness}점
+                {feedback.logic_flow}점
               </span>
             </div>
-            <Progress value={feedback.naturalness} className="h-3" />
+            <Progress value={feedback.logic_flow} className="h-3" />
             <p
               style={{
-                fontSize: "14px",
+                fontSize: "13px",
                 color: "#6A6A6A",
                 marginTop: "8px",
                 fontWeight: 500,
               }}
             >
-              {getScoreLabel(feedback.naturalness)}
+              {getScoreLabel(feedback.logic_flow)} · 문장들이 자연스럽게 연결되었나요?
+            </p>
+          </div>
+
+          {/* Filler Usage (입문자 핵심 기능!) */}
+          <div>
+            <div className="flex items-center justify-between mb-3">
+              <span
+                style={{
+                  fontSize: "16px",
+                  fontWeight: 600,
+                  color: "#111111",
+                }}
+              >
+                💬 필러 사용 (Filler Usage)
+              </span>
+              <span
+                className="px-3 py-1 rounded-full text-sm font-bold"
+                style={{
+                  background: feedback.filler_usage.count >= 3 
+                    ? "linear-gradient(135deg, #4CAF50, #66BB6A)" 
+                    : feedback.filler_usage.count >= 1
+                    ? "linear-gradient(135deg, #FF9800, #FFB74D)"
+                    : "linear-gradient(135deg, #F44336, #E57373)",
+                  color: "white",
+                }}
+              >
+                {feedback.filler_usage.count}회 사용
+              </span>
+            </div>
+            {feedback.filler_usage.used_fillers.length > 0 && (
+              <div className="flex gap-2 flex-wrap mb-3">
+                {feedback.filler_usage.used_fillers.map((filler, idx) => (
+                  <span
+                    key={idx}
+                    className="px-3 py-1 rounded-lg text-sm font-semibold"
+                    style={{
+                      background: "linear-gradient(135deg, #E8EAF6, #F3E5F5)",
+                      color: "#5B4D7C",
+                      border: "1px solid #B39DDB",
+                    }}
+                  >
+                    "{filler}"
+                  </span>
+                ))}
+              </div>
+            )}
+            <p
+              style={{
+                fontSize: "14px",
+                color: "#4A4A4A",
+                lineHeight: "1.7",
+                background: "#FFF9C4",
+                padding: "12px",
+                borderRadius: "8px",
+                border: "1px solid #FFF59D",
+              }}
+            >
+              {feedback.filler_usage.feedback}
             </p>
           </div>
 

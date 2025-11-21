@@ -343,23 +343,7 @@ const Index = () => {
           )}
 
           {/* 문제 섞기 버튼 */}
-          <div className="flex justify-center pt-4">
-            <button
-              onClick={handleShuffle}
-              className="flex items-center gap-2 h-10 px-4 rounded-lg transition-all duration-200 hover:bg-opacity-80"
-              style={{
-                background:
-                  "linear-gradient(100deg, #B39DDB 0%, #CE93D8 42%, #F8BBD0 100%)",
-                color: "white",
-                fontWeight: 600,
-                fontSize: "14px",
-                boxShadow: "0 4px 12px rgba(179, 157, 219, 0.3)",
-              }}
-            >
-              <Shuffle className="h-4 w-4" />
-              문제 순서 다시 섞기
-            </button>
-          </div>
+          <div className="flex justify-center pt-4"></div>
         </main>
       </div>
     </div>

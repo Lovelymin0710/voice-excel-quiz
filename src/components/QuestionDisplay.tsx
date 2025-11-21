@@ -201,6 +201,159 @@ export default function QuestionDisplay({
             </p>
           </div>
         )}
+        {/* 추천 필러 (입문자용) */}
+        {question.recommended_fillers && question.recommended_fillers.length > 0 && (
+          <div
+            className="p-4 rounded-xl"
+            style={{
+              background: "linear-gradient(135deg, #F3E5F5 0%, #E8EAF6 100%)",
+              border: "1px solid #D1C4E9",
+            }}
+          >
+            <p
+              className="text-sm font-semibold mb-2"
+              style={{
+                color: "#5B4D7C",
+                fontSize: "14px",
+              }}
+            >
+              🎯 오늘의 필러 (Fillers)
+            </p>
+            <div className="flex gap-2 flex-wrap">
+              {question.recommended_fillers.map((filler, idx) => (
+                <span
+                  key={idx}
+                  className="px-3 py-1 rounded-lg text-sm font-medium"
+                  style={{
+                    background: "white",
+                    color: "#5B4D7C",
+                    border: "1px solid #B39DDB",
+                    fontWeight: 600,
+                  }}
+                >
+                  "{filler}"
+                </span>
+              ))}
+            </div>
+            <p
+              className="text-xs mt-2"
+              style={{
+                color: "#6A6A6A",
+                fontSize: "12px",
+              }}
+            >
+              💬 이 필러를 3번 이상 사용해보세요!
+            </p>
+          </div>
+        )}
+
+        {/* 문장 뼈대 (Sentence Skeleton) - 입문자용 */}
+        {question.skeleton && (
+          <div
+            className="p-4 rounded-xl"
+            style={{
+              background: "linear-gradient(135deg, #E8F5E9 0%, #E0F2F1 100%)",
+              border: "1px solid #A5D6A7",
+            }}
+          >
+            <p
+              className="text-sm font-semibold mb-3"
+              style={{
+                color: "#2E7D32",
+                fontSize: "14px",
+              }}
+            >
+              📝 문장 뼈대 (이 구조로 말해보세요!)
+            </p>
+            <div className="space-y-3">
+              <div className="flex gap-3 items-start">
+                <span
+                  className="px-2 py-1 rounded text-xs font-bold flex-shrink-0"
+                  style={{
+                    background: "#4CAF50",
+                    color: "white",
+                  }}
+                >
+                  Start
+                </span>
+                <p
+                  className="text-sm flex-1"
+                  style={{
+                    color: "#1B5E20",
+                    fontSize: "13px",
+                    lineHeight: "1.6",
+                  }}
+                >
+                  {question.skeleton.start}
+                </p>
+              </div>
+              <div className="flex gap-3 items-start">
+                <span
+                  className="px-2 py-1 rounded text-xs font-bold flex-shrink-0"
+                  style={{
+                    background: "#66BB6A",
+                    color: "white",
+                  }}
+                >
+                  Reason
+                </span>
+                <p
+                  className="text-sm flex-1"
+                  style={{
+                    color: "#1B5E20",
+                    fontSize: "13px",
+                    lineHeight: "1.6",
+                  }}
+                >
+                  {question.skeleton.reason}
+                </p>
+              </div>
+              <div className="flex gap-3 items-start">
+                <span
+                  className="px-2 py-1 rounded text-xs font-bold flex-shrink-0"
+                  style={{
+                    background: "#81C784",
+                    color: "white",
+                  }}
+                >
+                  Example
+                </span>
+                <p
+                  className="text-sm flex-1"
+                  style={{
+                    color: "#1B5E20",
+                    fontSize: "13px",
+                    lineHeight: "1.6",
+                  }}
+                >
+                  {question.skeleton.example}
+                </p>
+              </div>
+              <div className="flex gap-3 items-start">
+                <span
+                  className="px-2 py-1 rounded text-xs font-bold flex-shrink-0"
+                  style={{
+                    background: "#A5D6A7",
+                    color: "#1B5E20",
+                  }}
+                >
+                  Wrap-up
+                </span>
+                <p
+                  className="text-sm flex-1"
+                  style={{
+                    color: "#1B5E20",
+                    fontSize: "13px",
+                    lineHeight: "1.6",
+                  }}
+                >
+                  {question.skeleton.wrapup}
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
         <div
           className="p-4 rounded-xl"
           style={{
