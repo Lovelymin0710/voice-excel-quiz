@@ -11,7 +11,7 @@
 
 아래 링크에서 바로 사용해볼 수 있습니다:
 
-👉 **https://voice-excel-quiz.lovable.app/**
+👉 **https://youngscatch.vercel.app**
 
 ---
 
