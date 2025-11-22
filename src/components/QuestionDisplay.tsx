@@ -19,27 +19,51 @@ export default function QuestionDisplay({
   const [voicesLoaded, setVoicesLoaded] = useState(false);
   const synthRef = useRef<SpeechSynthesis | null>(null);
   const utterRef = useRef<SpeechSynthesisUtterance | null>(null);
+  const audioContextRef = useRef<AudioContext | null>(null);
 
-  // iOS Safari용 음성 목록 로드
+  // 안드로이드 + iOS 모두 대응: 음성 목록 로드
   useEffect(() => {
     synthRef.current = window.speechSynthesis ?? null;
 
     const loadVoices = () => {
       if (synthRef.current) {
-        synthRef.current.getVoices(); // 음성 목록 로드 트리거
-        setVoicesLoaded(true);
+        const voices = synthRef.current.getVoices();
+        if (voices.length > 0) {
+          setVoicesLoaded(true);
+        }
+      }
+    };
+
+    // 안드로이드: AudioContext 활성화 (TTS를 위해 필요)
+    const activateAudioContext = () => {
+      if (!audioContextRef.current) {
+        try {
+          audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
+        } catch (e) {
+          console.warn("AudioContext 생성 실패:", e);
+        }
       }
     };
 
     // 즉시 시도
     loadVoices();
+    activateAudioContext();
 
-    // iOS Safari용 이벤트 리스너
+    // iOS Safari + 안드로이드 Chrome용 이벤트 리스너
     if (synthRef.current?.onvoiceschanged !== undefined) {
       synthRef.current.onvoiceschanged = loadVoices;
     }
 
+    // 안드로이드: 약간의 지연 후 다시 시도 (음성 목록 로드 대기)
+    const timeoutId = setTimeout(() => {
+      loadVoices();
+      if (!voicesLoaded) {
+        setTimeout(loadVoices, 1000);
+      }
+    }, 100);
+
     return () => {
+      clearTimeout(timeoutId);
       if (synthRef.current?.onvoiceschanged) {
         synthRef.current.onvoiceschanged = null;
       }
@@ -74,8 +98,10 @@ export default function QuestionDisplay({
 
   const speakQuestion = () => {
     if (!synthRef.current) {
+      console.error("SpeechSynthesis를 사용할 수 없습니다.");
       return;
     }
+    
     if (synthRef.current.speaking || synthRef.current.pending) {
       stopSpeak();
       return;
@@ -84,58 +110,176 @@ export default function QuestionDisplay({
     const text = question.question;
     if (!text?.trim()) return;
 
+    // 안드로이드: AudioContext 활성화 (사용자 상호작용 시점)
+    if (audioContextRef.current?.state === 'suspended') {
+      audioContextRef.current.resume().catch(() => {
+        console.warn("AudioContext 활성화 실패");
+      });
+    }
+
     const utter = new SpeechSynthesisUtterance(text);
     utter.lang = "en-US";
-    utter.rate = 0.92; // iOS에서 더 자연스럽게
-    utter.pitch = 1.05; // iOS에서 더 자연스럽게
+    utter.rate = 0.95; // 두 플랫폼 모두 자연스러운 속도
+    utter.pitch = 1.0; // 자연스러운 pitch
     utter.volume = 1.0;
 
-    // iOS Safari에서 더 자연스러운 음성 선택
+    // 플랫폼별 최적 여성 음성 선택
     const voices = synthRef.current.getVoices?.() || [];
-
-    // 우선순위: 고품질 자연스러운 음성 (Samantha > Karen > Nicky > 기타 고품질)
-    const preferredVoices = ["Samantha", "Karen", "Nicky", "Alex", "Victoria"];
     let selectedVoice = null;
 
-    // 1. 우선순위 음성 찾기
-    for (const voiceName of preferredVoices) {
-      selectedVoice = voices.find(
-        (v) => v.name === voiceName && v.lang?.toLowerCase().startsWith("en")
-      );
-      if (selectedVoice) break;
+    // 안드로이드: 음성 목록이 비어있으면 재시도
+    if (voices.length === 0) {
+      console.warn("음성 목록이 비어있습니다. 재시도 중...");
+      if (synthRef.current.getVoices) {
+        const retryVoices = synthRef.current.getVoices();
+        if (retryVoices.length > 0) {
+          voices.push(...retryVoices);
+        }
+      }
     }
 
-    // 2. iOS에서 localService가 false인 고품질 음성 찾기 (iOS의 Alex, Samantha 등)
+    // ===== 여성 음성만 선택 =====
+    
+    // 1. iOS 최우선: Samantha (가장 자연스러운 여성 음성)
+    selectedVoice = voices.find(
+      (v) => 
+        v.name === "Samantha" && 
+        v.lang?.toLowerCase() === "en-us" &&
+        !v.localService // iOS의 고품질 Samantha만
+    );
+
+    // 2. iOS: Karen (자연스러운 여성 음성)
     if (!selectedVoice) {
       selectedVoice = voices.find(
-        (v) => v.lang?.toLowerCase().startsWith("en-us") && !v.localService
+        (v) => 
+          v.name === "Karen" && 
+          v.lang?.toLowerCase().startsWith("en") &&
+          !v.localService
       );
     }
 
-    // 3. en-US 음성 찾기
+    // 3. iOS: Victoria (자연스러운 여성 음성)
     if (!selectedVoice) {
-      selectedVoice = voices.find((v) =>
-        v.lang?.toLowerCase().startsWith("en-us")
+      selectedVoice = voices.find(
+        (v) => 
+          v.name === "Victoria" && 
+          v.lang?.toLowerCase().startsWith("en") &&
+          !v.localService
       );
     }
 
-    // 4. 아무 영어 음성
+    // 4. iOS: Nicky (자연스러운 여성 음성)
     if (!selectedVoice) {
-      selectedVoice = voices.find((v) =>
-        v.lang?.toLowerCase().startsWith("en")
+      selectedVoice = voices.find(
+        (v) => 
+          v.name === "Nicky" && 
+          v.lang?.toLowerCase().startsWith("en") &&
+          !v.localService
       );
+    }
+
+    // 5. 안드로이드: Microsoft Zira (여성 음성)
+    if (!selectedVoice) {
+      selectedVoice = voices.find(
+        (v) => 
+          (v.name.includes("Zira") || v.name === "Microsoft Zira") &&
+          v.lang?.toLowerCase() === "en-us"
+      );
+    }
+
+    // 6. 안드로이드: Google US English (여성 버전)
+    if (!selectedVoice) {
+      selectedVoice = voices.find(
+        (v) => 
+          (v.name.includes("Google US English") || v.name.includes("US English")) &&
+          v.lang?.toLowerCase() === "en-us" &&
+          !v.name.toLowerCase().includes("male") // 남성 음성 제외
+      );
+    }
+
+    // 7. iOS: localService: false인 여성 음성 (고품질)
+    if (!selectedVoice) {
+      selectedVoice = voices.find(
+        (v) => 
+          v.lang?.toLowerCase() === "en-us" && 
+          !v.localService &&
+          !v.name.toLowerCase().includes("alex") && // Alex 제외
+          !v.name.toLowerCase().includes("daniel") && // Daniel 제외
+          !v.name.toLowerCase().includes("mark") && // Mark 제외
+          !v.name.toLowerCase().includes("male") // 남성 음성 제외
+      );
+    }
+
+    // 8. 공통: en-US 여성 음성 (이름으로 판단)
+    if (!selectedVoice) {
+      selectedVoice = voices.find((v) => {
+        const name = v.name.toLowerCase();
+        const isFemale = 
+          name.includes("samantha") ||
+          name.includes("karen") ||
+          name.includes("victoria") ||
+          name.includes("nicky") ||
+          name.includes("zira") ||
+          name.includes("female") ||
+          (!name.includes("alex") && 
+           !name.includes("daniel") && 
+           !name.includes("mark") && 
+           !name.includes("male") &&
+           !name.includes("david") &&
+           !name.includes("fred"));
+        return v.lang?.toLowerCase() === "en-us" && isFemale;
+      });
+    }
+
+    // 9. 최후의 수단: en-US 음성 (localService 상관없이, 남성 제외)
+    if (!selectedVoice) {
+      selectedVoice = voices.find((v) => {
+        const name = v.name.toLowerCase();
+        return v.lang?.toLowerCase() === "en-us" &&
+          !name.includes("alex") &&
+          !name.includes("daniel") &&
+          !name.includes("mark") &&
+          !name.includes("male") &&
+          !name.includes("david") &&
+          !name.includes("fred");
+      });
     }
 
     if (selectedVoice) {
       utter.voice = selectedVoice;
+      console.log("✅ 선택된 여성 음성:", selectedVoice.name, selectedVoice.lang, 
+        selectedVoice.localService !== undefined ? `localService: ${selectedVoice.localService}` : "");
+    } else {
+      console.warn("⚠️ 여성 영어 음성을 찾을 수 없습니다. 기본 음성을 사용합니다.");
     }
 
-    utter.onstart = () => setIsSpeaking(true);
-    utter.onend = () => setIsSpeaking(false);
-    utter.onerror = () => setIsSpeaking(false);
+    // 에러 핸들링 개선
+    utter.onstart = () => {
+      setIsSpeaking(true);
+      console.log("🎤 TTS 시작 (여성 음성)");
+    };
+    
+    utter.onend = () => {
+      setIsSpeaking(false);
+      console.log("✅ TTS 종료");
+    };
+    
+    utter.onerror = (event) => {
+      setIsSpeaking(false);
+      console.error("❌ TTS 오류:", event.error, event.type);
+      if (event.error === 'not-allowed') {
+        console.error("TTS 권한이 거부되었습니다.");
+      }
+    };
 
     utterRef.current = utter;
-    synthRef.current.speak(utter);
+    
+    try {
+      synthRef.current.speak(utter);
+    } catch (error) {
+      console.error("TTS 실행 오류:", error);
+      setIsSpeaking(false);
+    }
   };
 
   return (
