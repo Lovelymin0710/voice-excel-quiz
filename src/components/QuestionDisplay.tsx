@@ -38,7 +38,8 @@ export default function QuestionDisplay({
     const activateAudioContext = () => {
       if (!audioContextRef.current) {
         try {
-          audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
+          audioContextRef.current = new (window.AudioContext ||
+            (window as any).webkitAudioContext)();
         } catch (e) {
           console.warn("AudioContext 생성 실패:", e);
         }
@@ -101,7 +102,7 @@ export default function QuestionDisplay({
       console.error("SpeechSynthesis를 사용할 수 없습니다.");
       return;
     }
-    
+
     if (synthRef.current.speaking || synthRef.current.pending) {
       stopSpeak();
       return;
@@ -111,7 +112,7 @@ export default function QuestionDisplay({
     if (!text?.trim()) return;
 
     // 안드로이드: AudioContext 활성화 (사용자 상호작용 시점)
-    if (audioContextRef.current?.state === 'suspended') {
+    if (audioContextRef.current?.state === "suspended") {
       audioContextRef.current.resume().catch(() => {
         console.warn("AudioContext 활성화 실패");
       });
@@ -138,50 +139,44 @@ export default function QuestionDisplay({
       }
     }
 
-    // ===== 여성 음성만 선택 =====
-    
-    // 1. iOS 최우선: Samantha (가장 자연스러운 여성 음성)
+    // ===== iOS: Samantha 또는 Ava 우선 선택 =====
+
+    // 1. iOS 최우선: Samantha (가장 자연스러운 여성 음성, localService: false)
     selectedVoice = voices.find(
-      (v) => 
-        v.name === "Samantha" && 
+      (v) =>
+        v.name === "Samantha" &&
         v.lang?.toLowerCase() === "en-us" &&
         !v.localService // iOS의 고품질 Samantha만
     );
 
-    // 2. iOS: Karen (자연스러운 여성 음성)
+    // 2. iOS 차선: Ava (자연스러운 여성 음성, localService: false)
     if (!selectedVoice) {
       selectedVoice = voices.find(
-        (v) => 
-          v.name === "Karen" && 
-          v.lang?.toLowerCase().startsWith("en") &&
-          !v.localService
+        (v) =>
+          v.name === "Ava" &&
+          v.lang?.toLowerCase() === "en-us" &&
+          !v.localService // iOS의 고품질 Ava만
       );
     }
 
-    // 3. iOS: Victoria (자연스러운 여성 음성)
+    // 3. iOS: Samantha (localService 체크 없이)
     if (!selectedVoice) {
       selectedVoice = voices.find(
-        (v) => 
-          v.name === "Victoria" && 
-          v.lang?.toLowerCase().startsWith("en") &&
-          !v.localService
+        (v) => v.name === "Samantha" && v.lang?.toLowerCase() === "en-us"
       );
     }
 
-    // 4. iOS: Nicky (자연스러운 여성 음성)
+    // 4. iOS: Ava (localService 체크 없이)
     if (!selectedVoice) {
       selectedVoice = voices.find(
-        (v) => 
-          v.name === "Nicky" && 
-          v.lang?.toLowerCase().startsWith("en") &&
-          !v.localService
+        (v) => v.name === "Ava" && v.lang?.toLowerCase() === "en-us"
       );
     }
 
     // 5. 안드로이드: Microsoft Zira (여성 음성)
     if (!selectedVoice) {
       selectedVoice = voices.find(
-        (v) => 
+        (v) =>
           (v.name.includes("Zira") || v.name === "Microsoft Zira") &&
           v.lang?.toLowerCase() === "en-us"
       );
@@ -190,8 +185,9 @@ export default function QuestionDisplay({
     // 6. 안드로이드: Google US English (여성 버전)
     if (!selectedVoice) {
       selectedVoice = voices.find(
-        (v) => 
-          (v.name.includes("Google US English") || v.name.includes("US English")) &&
+        (v) =>
+          (v.name.includes("Google US English") ||
+            v.name.includes("US English")) &&
           v.lang?.toLowerCase() === "en-us" &&
           !v.name.toLowerCase().includes("male") // 남성 음성 제외
       );
@@ -200,8 +196,8 @@ export default function QuestionDisplay({
     // 7. iOS: localService: false인 여성 음성 (고품질)
     if (!selectedVoice) {
       selectedVoice = voices.find(
-        (v) => 
-          v.lang?.toLowerCase() === "en-us" && 
+        (v) =>
+          v.lang?.toLowerCase() === "en-us" &&
           !v.localService &&
           !v.name.toLowerCase().includes("alex") && // Alex 제외
           !v.name.toLowerCase().includes("daniel") && // Daniel 제외
@@ -210,23 +206,24 @@ export default function QuestionDisplay({
       );
     }
 
-    // 8. 공통: en-US 여성 음성 (이름으로 판단)
+    // 8. 공통: en-US 여성 음성 (이름으로 판단, Ava 포함)
     if (!selectedVoice) {
       selectedVoice = voices.find((v) => {
         const name = v.name.toLowerCase();
-        const isFemale = 
+        const isFemale =
           name.includes("samantha") ||
+          name.includes("ava") ||
           name.includes("karen") ||
           name.includes("victoria") ||
           name.includes("nicky") ||
           name.includes("zira") ||
           name.includes("female") ||
-          (!name.includes("alex") && 
-           !name.includes("daniel") && 
-           !name.includes("mark") && 
-           !name.includes("male") &&
-           !name.includes("david") &&
-           !name.includes("fred"));
+          (!name.includes("alex") &&
+            !name.includes("daniel") &&
+            !name.includes("mark") &&
+            !name.includes("male") &&
+            !name.includes("david") &&
+            !name.includes("fred"));
         return v.lang?.toLowerCase() === "en-us" && isFemale;
       });
     }
@@ -235,22 +232,32 @@ export default function QuestionDisplay({
     if (!selectedVoice) {
       selectedVoice = voices.find((v) => {
         const name = v.name.toLowerCase();
-        return v.lang?.toLowerCase() === "en-us" &&
+        return (
+          v.lang?.toLowerCase() === "en-us" &&
           !name.includes("alex") &&
           !name.includes("daniel") &&
           !name.includes("mark") &&
           !name.includes("male") &&
           !name.includes("david") &&
-          !name.includes("fred");
+          !name.includes("fred")
+        );
       });
     }
 
     if (selectedVoice) {
       utter.voice = selectedVoice;
-      console.log("✅ 선택된 여성 음성:", selectedVoice.name, selectedVoice.lang, 
-        selectedVoice.localService !== undefined ? `localService: ${selectedVoice.localService}` : "");
+      console.log(
+        "✅ 선택된 음성:",
+        selectedVoice.name,
+        selectedVoice.lang,
+        selectedVoice.localService !== undefined
+          ? `localService: ${selectedVoice.localService}`
+          : ""
+      );
     } else {
-      console.warn("⚠️ 여성 영어 음성을 찾을 수 없습니다. 기본 음성을 사용합니다.");
+      console.warn(
+        "⚠️ Samantha 또는 Ava 음성을 찾을 수 없습니다. 기본 음성을 사용합니다."
+      );
     }
 
     // 에러 핸들링 개선
@@ -258,22 +265,22 @@ export default function QuestionDisplay({
       setIsSpeaking(true);
       console.log("🎤 TTS 시작 (여성 음성)");
     };
-    
+
     utter.onend = () => {
       setIsSpeaking(false);
       console.log("✅ TTS 종료");
     };
-    
+
     utter.onerror = (event) => {
       setIsSpeaking(false);
       console.error("❌ TTS 오류:", event.error, event.type);
-      if (event.error === 'not-allowed') {
+      if (event.error === "not-allowed") {
         console.error("TTS 권한이 거부되었습니다.");
       }
     };
 
     utterRef.current = utter;
-    
+
     try {
       synthRef.current.speak(utter);
     } catch (error) {
