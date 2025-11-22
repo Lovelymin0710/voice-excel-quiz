@@ -87,16 +87,15 @@ const Landing = () => {
         <h1
           className="font-bold leading-none mb-4 text-center"
           style={{
-            fontSize: "clamp(32px, 8vw, 50px)",
+            fontSize: "clamp(28px, 7vw, 50px)",
             color: "#5B4D7C",
             letterSpacing: "-0.015em",
             fontWeight: 700,
             fontFamily: "Pretendard",
-            whiteSpace: "nowrap",
-            overflow: "hidden",
-            textOverflow: "ellipsis",
             width: "100%",
-            padding: "0 4px",
+            padding: "0 8px",
+            wordBreak: "keep-all",
+            lineHeight: "1.2",
           }}
         >
           Youngs Catch AI
