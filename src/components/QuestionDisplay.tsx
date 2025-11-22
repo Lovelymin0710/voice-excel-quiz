@@ -16,12 +16,33 @@ export default function QuestionDisplay({
   const [isHidden, setIsHidden] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [showKo, setShowKo] = useState(false);
+  const [voicesLoaded, setVoicesLoaded] = useState(false);
   const synthRef = useRef<SpeechSynthesis | null>(null);
   const utterRef = useRef<SpeechSynthesisUtterance | null>(null);
 
+  // iOS Safari용 음성 목록 로드
   useEffect(() => {
     synthRef.current = window.speechSynthesis ?? null;
+
+    const loadVoices = () => {
+      if (synthRef.current) {
+        synthRef.current.getVoices(); // 음성 목록 로드 트리거
+        setVoicesLoaded(true);
+      }
+    };
+
+    // 즉시 시도
+    loadVoices();
+
+    // iOS Safari용 이벤트 리스너
+    if (synthRef.current?.onvoiceschanged !== undefined) {
+      synthRef.current.onvoiceschanged = loadVoices;
+    }
+
     return () => {
+      if (synthRef.current?.onvoiceschanged) {
+        synthRef.current.onvoiceschanged = null;
+      }
       if (synthRef.current?.speaking || synthRef.current?.pending) {
         synthRef.current.cancel();
       }
@@ -65,13 +86,49 @@ export default function QuestionDisplay({
 
     const utter = new SpeechSynthesisUtterance(text);
     utter.lang = "en-US";
-    utter.rate = 0.95;
-    utter.pitch = 1.0;
+    utter.rate = 0.92; // iOS에서 더 자연스럽게
+    utter.pitch = 1.05; // iOS에서 더 자연스럽게
+    utter.volume = 1.0;
+
+    // iOS Safari에서 더 자연스러운 음성 선택
     const voices = synthRef.current.getVoices?.() || [];
-    const enVoice =
-      voices.find((v) => v.lang?.toLowerCase().startsWith("en-us")) ||
-      voices.find((v) => v.lang?.toLowerCase().startsWith("en"));
-    if (enVoice) utter.voice = enVoice;
+
+    // 우선순위: 고품질 자연스러운 음성 (Samantha > Karen > Nicky > 기타 고품질)
+    const preferredVoices = ["Samantha", "Karen", "Nicky", "Alex", "Victoria"];
+    let selectedVoice = null;
+
+    // 1. 우선순위 음성 찾기
+    for (const voiceName of preferredVoices) {
+      selectedVoice = voices.find(
+        (v) => v.name === voiceName && v.lang?.toLowerCase().startsWith("en")
+      );
+      if (selectedVoice) break;
+    }
+
+    // 2. iOS에서 localService가 false인 고품질 음성 찾기 (iOS의 Alex, Samantha 등)
+    if (!selectedVoice) {
+      selectedVoice = voices.find(
+        (v) => v.lang?.toLowerCase().startsWith("en-us") && !v.localService
+      );
+    }
+
+    // 3. en-US 음성 찾기
+    if (!selectedVoice) {
+      selectedVoice = voices.find((v) =>
+        v.lang?.toLowerCase().startsWith("en-us")
+      );
+    }
+
+    // 4. 아무 영어 음성
+    if (!selectedVoice) {
+      selectedVoice = voices.find((v) =>
+        v.lang?.toLowerCase().startsWith("en")
+      );
+    }
+
+    if (selectedVoice) {
+      utter.voice = selectedVoice;
+    }
 
     utter.onstart = () => setIsSpeaking(true);
     utter.onend = () => setIsSpeaking(false);
@@ -202,50 +259,51 @@ export default function QuestionDisplay({
           </div>
         )}
         {/* 추천 필러 (입문자용) */}
-        {question.recommended_fillers && question.recommended_fillers.length > 0 && (
-          <div
-            className="p-4 rounded-xl"
-            style={{
-              background: "linear-gradient(135deg, #F3E5F5 0%, #E8EAF6 100%)",
-              border: "1px solid #D1C4E9",
-            }}
-          >
-            <p
-              className="text-sm font-semibold mb-2"
+        {question.recommended_fillers &&
+          question.recommended_fillers.length > 0 && (
+            <div
+              className="p-4 rounded-xl"
               style={{
-                color: "#5B4D7C",
-                fontSize: "14px",
+                background: "linear-gradient(135deg, #F3E5F5 0%, #E8EAF6 100%)",
+                border: "1px solid #D1C4E9",
               }}
             >
-              🎯 오늘의 필러 (Fillers)
-            </p>
-            <div className="flex gap-2 flex-wrap">
-              {question.recommended_fillers.map((filler, idx) => (
-                <span
-                  key={idx}
-                  className="px-3 py-1 rounded-lg text-sm font-medium"
-                  style={{
-                    background: "white",
-                    color: "#5B4D7C",
-                    border: "1px solid #B39DDB",
-                    fontWeight: 600,
-                  }}
-                >
-                  "{filler}"
-                </span>
-              ))}
+              <p
+                className="text-sm font-semibold mb-2"
+                style={{
+                  color: "#5B4D7C",
+                  fontSize: "14px",
+                }}
+              >
+                🎯 오늘의 필러 (Fillers)
+              </p>
+              <div className="flex gap-2 flex-wrap">
+                {question.recommended_fillers.map((filler, idx) => (
+                  <span
+                    key={idx}
+                    className="px-3 py-1 rounded-lg text-sm font-medium"
+                    style={{
+                      background: "white",
+                      color: "#5B4D7C",
+                      border: "1px solid #B39DDB",
+                      fontWeight: 600,
+                    }}
+                  >
+                    "{filler}"
+                  </span>
+                ))}
+              </div>
+              <p
+                className="text-xs mt-2"
+                style={{
+                  color: "#6A6A6A",
+                  fontSize: "12px",
+                }}
+              >
+                💬 이 필러를 3번 이상 사용해보세요!
+              </p>
             </div>
-            <p
-              className="text-xs mt-2"
-              style={{
-                color: "#6A6A6A",
-                fontSize: "12px",
-              }}
-            >
-              💬 이 필러를 3번 이상 사용해보세요!
-            </p>
-          </div>
-        )}
+          )}
 
         {/* 문장 뼈대 (Sentence Skeleton) - 입문자용 */}
         {question.skeleton && (
