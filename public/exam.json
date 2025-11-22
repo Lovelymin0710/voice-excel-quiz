@@ -1,0 +1,282 @@
+[
+  {
+    "id": 1,
+    "category": "Daily Life",
+    "difficulty": "IL",
+    "question": "What things do you usually do on the weekend?",
+    "ko": "주말에는 보통 어떤 일을 하나요?",
+    "skeleton": {
+      "start": "To be honest, I usually... on weekends.",
+      "reason": "The reason is that...",
+      "example": "For example, last weekend I...",
+      "wrapup": "So overall, my weekends are..."
+    },
+    "recommended_fillers": ["To be honest", "For example"]
+  },
+  {
+    "id": 2,
+    "category": "Food & Restaurant",
+    "difficulty": "IL",
+    "question": "Describe one of your favourite restaurants — what type of food they serve, what you like about it.",
+    "ko": "가장 좋아하는 음식점에 대해 말해 주세요. 어떤 음식을 제공하며, 그곳의 어떤 점이 마음에 드나요?",
+    "skeleton": {
+      "start": "Actually, my favourite restaurant is...",
+      "reason": "The reason I like it is that...",
+      "example": "For instance, they serve...",
+      "wrapup": "So that's why I love this place."
+    },
+    "recommended_fillers": ["Actually", "For instance"]
+  },
+  {
+    "id": 3,
+    "category": "Home",
+    "difficulty": "IL",
+    "question": "Tell me about your home: which room you like the most, what you do there.",
+    "ko": "집에 대해 이야기해 주세요. 가장 좋아하는 방은 어디이며, 그곳에서 무엇을 하나요?",
+    "skeleton": {
+      "start": "Personally, my favourite room is...",
+      "reason": "The reason is that...",
+      "example": "For example, I usually...",
+      "wrapup": "So overall, it's my favourite space."
+    },
+    "recommended_fillers": ["Personally", "For example"]
+  },
+  {
+    "id": 4,
+    "category": "Travel",
+    "difficulty": "IM",
+    "question": "Can you describe a memorable traveling experience (country or city you visited)? What it was like, who you were with, what you did.",
+    "ko": "기억에 남는 여행 경험을 설명해 주세요. 어디로 갔고, 누구와 함께였으며, 무엇을 했나요?",
+    "skeleton": {
+      "start": "I guess the most memorable trip was to...",
+      "reason": "The reason it was special is that...",
+      "example": "For instance, we visited...",
+      "wrapup": "So that's why it's unforgettable."
+    },
+    "recommended_fillers": ["I guess", "For instance"]
+  },
+  {
+    "id": 5,
+    "category": "Language Learning",
+    "difficulty": "IM",
+    "question": "How did you first become interested in learning English (or another foreign language)? What difficulties have you had?",
+    "ko": "영어(또는 다른 외국어)에 관심을 가지게 된 계기는 무엇인가요? 배우면서 어려웠던 점은 무엇인가요?",
+    "skeleton": {
+      "start": "Honestly, I started learning English because...",
+      "reason": "The main reason was that...",
+      "example": "For example, I had difficulty with...",
+      "wrapup": "So overall, it's been challenging but rewarding."
+    },
+    "recommended_fillers": ["Honestly", "For example"]
+  },
+  {
+    "id": 6,
+    "category": "Neighborhood",
+    "difficulty": "IL",
+    "question": "Describe your neighbourhood: what kind of community do you live in, who your neighbours are, any memorable event there.",
+    "ko": "당신의 동네를 묘사해 주세요. 어떤 지역에 살고 있으며, 이웃은 어떤 사람들인가요? 기억에 남는 일이 있었나요?",
+    "skeleton": {
+      "start": "For me, my neighborhood is...",
+      "reason": "What I like about it is that...",
+      "example": "For example, last year we had...",
+      "wrapup": "So that's what my community is like."
+    },
+    "recommended_fillers": ["For me", "For example"]
+  },
+  {
+    "id": 7,
+    "category": "Sports",
+    "difficulty": "IM",
+    "question": "Tell me about a sporting event you've been to: what happened, how was the outcome.",
+    "ko": "직접 관람했던 스포츠 경기 하나를 이야기해 주세요. 어떤 일이 있었고, 결과는 어땠나요?",
+    "skeleton": {
+      "start": "Actually, I went to... game.",
+      "reason": "The reason I remember it is that...",
+      "example": "For instance, in the second half...",
+      "wrapup": "So overall, it was an exciting experience."
+    },
+    "recommended_fillers": ["Actually", "For instance"]
+  },
+  {
+    "id": 8,
+    "category": "Comparison",
+    "difficulty": "IH",
+    "question": "Compare two different classes (or two different jobs) you had: what you liked about one, what you didn't like about the other.",
+    "ko": "경험했던 두 수업(또는 두 직업)을 비교해 주세요. 한쪽에서 좋았던 점과 다른 한쪽에서 마음에 들지 않았던 점은 무엇인가요?",
+    "skeleton": {
+      "start": "To be honest, I had two very different...",
+      "reason": "The first one was good because...",
+      "example": "On the other hand, the second one...",
+      "wrapup": "So overall, I preferred the first one."
+    },
+    "recommended_fillers": ["To be honest", "On the other hand"]
+  },
+  {
+    "id": 9,
+    "category": "Home Improvement",
+    "difficulty": "IM",
+    "question": "Describe the changes you made to your home (or apartment) and why you made them.",
+    "ko": "집(또는 아파트)에 어떤 변화를 주었는지, 그리고 왜 그렇게 했는지 설명해 주세요.",
+    "skeleton": {
+      "start": "Recently, I made some changes to my...",
+      "reason": "The reason I did this was that...",
+      "example": "For example, I changed...",
+      "wrapup": "So now my home is much better."
+    },
+    "recommended_fillers": ["Recently", "For example"]
+  },
+  {
+    "id": 10,
+    "category": "Technology",
+    "difficulty": "IM",
+    "question": "Tell me about a piece of technology you learned to use: how you learned it, what you had to do.",
+    "ko": "새롭게 배운 기술 기기에 대해 말해 주세요. 어떻게 배웠으며, 무엇을 해야 했나요?",
+    "skeleton": {
+      "start": "I guess the technology I learned was...",
+      "reason": "The reason I needed to learn it was that...",
+      "example": "For instance, at first I had to...",
+      "wrapup": "So overall, it was challenging but useful."
+    },
+    "recommended_fillers": ["I guess", "For instance"]
+  },
+  {
+    "id": 11,
+    "category": "Transportation",
+    "difficulty": "IL",
+    "question": "What kinds of public transportation are there in your country? Which type do you prefer and why?",
+    "ko": "당신의 나라에는 어떤 종류의 대중교통이 있나요? 어떤 교통수단을 선호하며 그 이유는 무엇인가요?",
+    "skeleton": {
+      "start": "For me, I usually take the...",
+      "reason": "The reason I prefer it is that...",
+      "example": "For example, it's faster than...",
+      "wrapup": "So that's why I use it most."
+    },
+    "recommended_fillers": ["For me", "For example"]
+  },
+  {
+    "id": 12,
+    "category": "Volunteer",
+    "difficulty": "IM",
+    "question": "Tell me about a memorable incident when you volunteered: what happened, why it was memorable.",
+    "ko": "봉사활동 중 기억에 남는 경험에 대해 말해 주세요. 어떤 일이 있었고, 왜 기억에 남나요?",
+    "skeleton": {
+      "start": "Honestly, one time I volunteered at...",
+      "reason": "The reason it was memorable is that...",
+      "example": "For instance, I met a person who...",
+      "wrapup": "So it was a really meaningful experience."
+    },
+    "recommended_fillers": ["Honestly", "For instance"]
+  },
+  {
+    "id": 13,
+    "category": "Hobby & Reading",
+    "difficulty": "IL",
+    "question": "Describe your reading (or hobby) habits: what kinds of books (or hobbies) you like, when you started, how it changed.",
+    "ko": "독서(또는 취미) 습관에 대해 설명해 주세요. 어떤 책(또는 취미)을 좋아하며, 언제 시작했고 어떻게 변했나요?",
+    "skeleton": {
+      "start": "Personally, I enjoy... in my free time.",
+      "reason": "The reason I like it is that...",
+      "example": "For example, I started when...",
+      "wrapup": "So it's become an important part of my life."
+    },
+    "recommended_fillers": ["Personally", "For example"]
+  },
+  {
+    "id": 14,
+    "category": "Transportation Issue",
+    "difficulty": "IM",
+    "question": "Tell me about a time when you had difficulty due to traffic or weather on your way to work (or school): what happened, what you did.",
+    "ko": "출근(또는 등교) 중 교통이나 날씨로 인해 어려움을 겪은 적이 있나요? 어떤 일이 있었고 어떻게 대처했나요?",
+    "skeleton": {
+      "start": "Actually, one time I was on my way to work when...",
+      "reason": "The problem was that...",
+      "example": "For instance, I had to...",
+      "wrapup": "So I learned to check the weather first."
+    },
+    "recommended_fillers": ["Actually", "For instance"]
+  },
+  {
+    "id": 15,
+    "category": "Café & Leisure",
+    "difficulty": "IL",
+    "question": "What is going to cafés like in your country? Describe your favourite café and a memorable visit.",
+    "ko": "당신의 나라에서는 카페에 가는 것이 어떤 문화인가요? 가장 좋아하는 카페와 기억에 남는 방문 경험을 말해 주세요.",
+    "skeleton": {
+      "start": "To be honest, going to cafés is very popular in my country.",
+      "reason": "The reason people like it is that...",
+      "example": "For example, my favourite café has...",
+      "wrapup": "So that's why café culture is important here."
+    },
+    "recommended_fillers": ["To be honest", "For example"]
+  },
+  {
+    "id": 16,
+    "category": "Project & Study",
+    "difficulty": "IM",
+    "question": "Describe a class project you worked on: what you did, what you learned, how it turned out.",
+    "ko": "참여했던 수업 프로젝트를 설명해 주세요. 어떤 일을 했고, 무엇을 배웠으며, 결과는 어땠나요?",
+    "skeleton": {
+      "start": "I guess the most interesting project was...",
+      "reason": "The reason it was challenging is that...",
+      "example": "For example, our team had to...",
+      "wrapup": "So overall, I learned a lot from it."
+    },
+    "recommended_fillers": ["I guess", "For example"]
+  },
+  {
+    "id": 17,
+    "category": "Friendship",
+    "difficulty": "IH",
+    "question": "Compare two friends of yours: how did you meet them, how are they similar/different, why you like one over the other.",
+    "ko": "당신의 친구 두 명을 비교해 주세요. 어떻게 만났으며, 어떤 점이 비슷하거나 다른가요? 한 명을 더 좋아하는 이유는 무엇인가요?",
+    "skeleton": {
+      "start": "For me, I have two close friends...",
+      "reason": "The first one is... while the second one is...",
+      "example": "For instance, friend A is more... but friend B is...",
+      "wrapup": "So both are important but in different ways."
+    },
+    "recommended_fillers": ["For me", "For instance"]
+  },
+  {
+    "id": 18,
+    "category": "Internet & App",
+    "difficulty": "IL",
+    "question": "Tell me about your favourite type of website (or app) you visit: what you like about it, how you use it.",
+    "ko": "자주 이용하는 웹사이트(또는 앱)에 대해 이야기해 주세요. 어떤 점이 마음에 들고 어떻게 사용하나요?",
+    "skeleton": {
+      "start": "Honestly, my favourite app is...",
+      "reason": "The reason I use it is that...",
+      "example": "For example, I can...",
+      "wrapup": "So it's become essential for me."
+    },
+    "recommended_fillers": ["Honestly", "For example"]
+  },
+  {
+    "id": 19,
+    "category": "Work & School Life",
+    "difficulty": "IL",
+    "question": "Describe your daily routine at work (or school): what you do, responsibilities, what you like/dislike.",
+    "ko": "직장(또는 학교)에서의 하루 일과를 설명해 주세요. 어떤 일을 하고, 어떤 점을 좋아하거나 싫어하나요?",
+    "skeleton": {
+      "start": "Typically, my day starts with...",
+      "reason": "The main thing I do is...",
+      "example": "For example, yesterday I had to...",
+      "wrapup": "So that's what my typical day looks like."
+    },
+    "recommended_fillers": ["Typically", "For example"]
+  },
+  {
+    "id": 20,
+    "category": "Role Play",
+    "difficulty": "IH",
+    "question": "Imagine you planned to see a movie with a friend but the show was sold out: call the friend, explain, offer 2–3 solutions.",
+    "ko": "친구와 영화를 보러 가기로 했는데 매진되었다고 상상해 보세요. 친구에게 전화해 상황을 설명하고 두세 가지 해결책을 제시해 보세요.",
+    "skeleton": {
+      "start": "Hey, I'm sorry but the movie is sold out.",
+      "reason": "The problem is that...",
+      "example": "Actually, we could... or we could...",
+      "wrapup": "So what do you think? Which option sounds better?"
+    },
+    "recommended_fillers": ["Actually", "I'm sorry but"]
+  }
+]
