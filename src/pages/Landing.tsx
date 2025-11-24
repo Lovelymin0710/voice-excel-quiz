@@ -1,7 +1,32 @@
 import { useNavigate } from "react-router-dom";
+import {
+  isKakaoAndroid,
+  openInExternalBrowser,
+  clearRedirectFlag,
+} from "@/utils/browserDetect";
+import { ExternalLink } from "lucide-react";
+import { useState, useEffect } from "react";
 
 const Landing = () => {
   const navigate = useNavigate();
+  const [showWarning, setShowWarning] = useState(false);
+
+  // 안드로이드 카카오톡만 감지
+  useEffect(() => {
+    if (isKakaoAndroid()) {
+      // 2초 후에도 페이지에 남아있으면 경고 표시 (리디렉션 실패)
+      const timer = setTimeout(() => {
+        setShowWarning(true);
+      }, 2000);
+
+      return () => clearTimeout(timer);
+    }
+  }, []);
+
+  const handleStayInKakao = () => {
+    setShowWarning(false);
+    clearRedirectFlag();
+  };
 
   return (
     <div
@@ -68,6 +93,47 @@ const Landing = () => {
           opacity: 0.65,
         }}
       />
+
+      {/* 안드로이드 카카오톡 인앱 브라우저 경고 */}
+      {showWarning && (
+        <div
+          className="fixed top-4 left-4 right-4 z-50 p-4 rounded-xl flex items-start gap-3 shadow-lg animate-in fade-in slide-in-from-top duration-500"
+          style={{
+            background: "linear-gradient(135deg, #FFF3E0 0%, #FFE0B2 100%)",
+            border: "2px solid #FFB74D",
+          }}
+        >
+          <span style={{ fontSize: "24px" }}>⚠️</span>
+          <div className="flex-1">
+            <p className="text-sm font-bold mb-1" style={{ color: "#E65100" }}>
+              음성 기능이 작동하지 않습니다
+            </p>
+            <p
+              className="text-xs mb-3"
+              style={{ color: "#6A6A6A", lineHeight: "1.5" }}
+            >
+              카카오톡 인앱 브라우저에서는 TTS 음성이 재생되지 않습니다.
+            </p>
+            <div className="flex gap-2">
+              <button
+                onClick={() => openInExternalBrowser()}
+                className="px-3 py-1.5 rounded-lg text-xs font-medium flex items-center gap-1"
+                style={{ background: "#FF9800", color: "white" }}
+              >
+                <ExternalLink className="h-3 w-3" />
+                Chrome에서 열기
+              </button>
+              <button
+                onClick={handleStayInKakao}
+                className="px-3 py-1.5 rounded-lg text-xs font-medium"
+                style={{ background: "#E0E0E0", color: "#6A6A6A" }}
+              >
+                그냥 사용하기
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* 메인 컨텐츠 */}
       <div className="flex-1 flex flex-col items-center justify-center relative z-10 w-full max-w-lg px-6 pt-20 pb-6">
