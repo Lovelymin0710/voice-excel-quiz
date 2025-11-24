@@ -42,9 +42,28 @@ export async function evaluateSpeaking(
     }
 
     if (!response.ok) {
-      const errorData = await response
-        .json()
-        .catch(() => ({ error: "Unknown error" }));
+      let errorData: any = { error: "Unknown error" };
+      
+      try {
+        const text = await response.text();
+        if (text) {
+          errorData = JSON.parse(text);
+        }
+      } catch (e) {
+        // JSON 파싱 실패 시 응답 텍스트 로깅
+        console.error("API 응답 파싱 실패:", response.status, response.statusText);
+        errorData = { 
+          error: `서버 오류 (${response.status}): ${response.statusText}` 
+        };
+      }
+
+      // 상세한 에러 로깅
+      console.error("API Error Details:", {
+        status: response.status,
+        statusText: response.statusText,
+        error: errorData,
+        url: apiUrl
+      });
 
       if (response.status === 429) {
         const retryAfter = errorData.retryAfter || 3600;
@@ -53,6 +72,14 @@ export async function evaluateSpeaking(
             retryAfter / 60
           )}분 후 다시 시도해주세요.`
         );
+      }
+
+      if (response.status === 404) {
+        throw new Error("API 엔드포인트를 찾을 수 없습니다. 서버 설정을 확인해주세요.");
+      }
+
+      if (response.status === 500) {
+        throw new Error(errorData.error || "서버 내부 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
       }
 
       throw new Error(errorData.error || `API 요청 실패 (${response.status})`);

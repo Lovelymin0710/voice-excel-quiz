@@ -34,17 +34,8 @@ interface AIFeedback {
   tone: "encouraging" | "neutral" | "strict";
 }
 
-// ===== 보안: API 키 체크 =====
-if (!process.env.OPENAI_API_KEY) {
-  throw new Error("OPENAI_API_KEY 환경 변수가 설정되지 않았습니다.");
-}
-
-// OpenAI 클라이언트 (서버에서만 초기화)
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
-
 // ===== 보안: 허용된 도메인 설정 =====
+// OpenAI 클라이언트는 핸들러 내부에서 초기화 (Lazy Loading)
 const allowedOrigins = [
   "https://voice-excel-quiz.lovable.app",
   "https://youngscatch.vercel.app",
@@ -135,11 +126,25 @@ function validateInput(data: any): { valid: boolean; error?: string } {
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
+  // ===== 보안: API 키 체크 (핸들러 내부에서) =====
+  if (!process.env.OPENAI_API_KEY) {
+    console.error("OPENAI_API_KEY 환경 변수가 설정되지 않았습니다.");
+    return res.status(500).json({ 
+      error: "서버 설정 오류입니다. 관리자에게 문의해주세요." 
+    });
+  }
+
+  // OpenAI 클라이언트 초기화 (핸들러 내부에서 - Lazy Loading)
+  const openai = new OpenAI({
+    apiKey: process.env.OPENAI_API_KEY,
+  });
+
   // ===== 보안: CORS 설정 (특정 도메인만 허용) =====
   const origin = req.headers.origin;
 
-  if (origin && allowedOrigins.includes(origin)) {
-    res.setHeader("Access-Control-Allow-Origin", origin);
+  // 개발 환경에서는 모든 origin 허용, 프로덕션에서는 제한
+  if (process.env.NODE_ENV === "development" || (origin && allowedOrigins.includes(origin))) {
+    res.setHeader("Access-Control-Allow-Origin", origin || "*");
     res.setHeader("Access-Control-Allow-Credentials", "true");
   }
 
