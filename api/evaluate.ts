@@ -129,8 +129,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   // ===== 보안: API 키 체크 (핸들러 내부에서) =====
   if (!process.env.OPENAI_API_KEY) {
     console.error("OPENAI_API_KEY 환경 변수가 설정되지 않았습니다.");
-    return res.status(500).json({ 
-      error: "서버 설정 오류입니다. 관리자에게 문의해주세요." 
+    return res.status(500).json({
+      error: "서버 설정 오류입니다. 관리자에게 문의해주세요.",
     });
   }
 
@@ -143,7 +143,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const origin = req.headers.origin;
 
   // 개발 환경에서는 모든 origin 허용, 프로덕션에서는 제한
-  if (process.env.NODE_ENV === "development" || (origin && allowedOrigins.includes(origin))) {
+  if (
+    process.env.NODE_ENV === "development" ||
+    (origin && allowedOrigins.includes(origin))
+  ) {
     res.setHeader("Access-Control-Allow-Origin", origin || "*");
     res.setHeader("Access-Control-Allow-Credentials", "true");
   }
